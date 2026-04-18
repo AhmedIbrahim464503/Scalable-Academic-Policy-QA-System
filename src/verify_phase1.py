@@ -3,8 +3,12 @@ from collections import defaultdict
 
 import fitz
 
-from baseline_retrieval import BaselineRetrievalAgent
-from config import DATA_OUTPUT, MASSIVE_DATA_OUTPUT, PDF_PATHS, THEMES_OUTPUT
+try:
+    from .baseline_retrieval import BaselineRetrievalAgent
+    from .config import DATA_OUTPUT, MASSIVE_DATA_OUTPUT, PDF_PATHS, THEMES_OUTPUT
+except ImportError:
+    from baseline_retrieval import BaselineRetrievalAgent
+    from config import DATA_OUTPUT, MASSIVE_DATA_OUTPUT, PDF_PATHS, THEMES_OUTPUT
 
 
 def load_json(path):

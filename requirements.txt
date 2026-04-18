@@ -1,0 +1,12 @@
+pdfplumber
+PyMuPDF
+scikit-learn
+numpy
+pandas
+datasketch
+streamlit
+groq
+pytest
+jupyter
+matplotlib
+seaborn

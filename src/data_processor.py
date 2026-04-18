@@ -7,18 +7,32 @@ from itertools import combinations
 
 import fitz  # PyMuPDF
 
-from config import (
-    CHUNK_SIZE,
-    DATA_OUTPUT,
-    MAX_THEME_COUNT,
-    MIN_THEME_SUPPORT,
-    OVERLAP,
-    PAGERANK_DAMPING,
-    PAGERANK_MAX_ITER,
-    PAGERANK_TOL,
-    PDF_PATHS,
-    THEMES_OUTPUT,
-)
+try:
+    from .config import (
+        CHUNK_SIZE,
+        DATA_OUTPUT,
+        MAX_THEME_COUNT,
+        MIN_THEME_SUPPORT,
+        OVERLAP,
+        PAGERANK_DAMPING,
+        PAGERANK_MAX_ITER,
+        PAGERANK_TOL,
+        PDF_PATHS,
+        THEMES_OUTPUT,
+    )
+except ImportError:
+    from config import (
+        CHUNK_SIZE,
+        DATA_OUTPUT,
+        MAX_THEME_COUNT,
+        MIN_THEME_SUPPORT,
+        OVERLAP,
+        PAGERANK_DAMPING,
+        PAGERANK_MAX_ITER,
+        PAGERANK_TOL,
+        PDF_PATHS,
+        THEMES_OUTPUT,
+    )
 
 
 STOPWORDS = {

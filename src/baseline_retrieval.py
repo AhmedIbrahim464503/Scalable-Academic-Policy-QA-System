@@ -5,7 +5,10 @@ import numpy as np
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 
-from config import DATA_OUTPUT
+try:
+    from .config import DATA_OUTPUT
+except ImportError:
+    from config import DATA_OUTPUT
 
 
 class BaselineRetrievalAgent:

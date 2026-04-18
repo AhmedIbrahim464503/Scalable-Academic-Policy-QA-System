@@ -1,7 +1,10 @@
 import json
 import uuid
 
-from config import DATA_OUTPUT, MASSIVE_DATA_OUTPUT, SCALABILITY_FACTOR
+try:
+    from .config import DATA_OUTPUT, MASSIVE_DATA_OUTPUT, SCALABILITY_FACTOR
+except ImportError:
+    from config import DATA_OUTPUT, MASSIVE_DATA_OUTPUT, SCALABILITY_FACTOR
 
 
 def generate_massive_dataset():
