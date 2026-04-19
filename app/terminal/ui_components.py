@@ -118,6 +118,7 @@ def render_help() -> Panel:
     command_table.add_row("/method [baseline|minhash|simhash]", "Switch retrieval mode.")
     command_table.add_row("/methods", "List loaded retrieval methods.")
     command_table.add_row("/compare", "Compare all methods on the last query.")
+    command_table.add_row("/debug-help", "Show extra commands available in debug mode.")
     command_table.add_row("/history", "Show recent query history.")
     command_table.add_row("/export", "Export current results to JSON.")
     command_table.add_row("/stats", "Show session statistics.")

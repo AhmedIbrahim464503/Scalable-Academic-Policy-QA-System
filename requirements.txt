@@ -5,6 +5,7 @@ numpy
 pandas
 datasketch
 simhash
+plotly
 streamlit
 groq
 pytest

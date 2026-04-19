@@ -53,6 +53,36 @@ SUPPORTED_METHODS = ("baseline", "minhash", "simhash")
 MINHASH_DEFAULTS = {"num_perm": 64, "threshold": 0.3, "shingle_size": 3}
 SIMHASH_DEFAULTS = {"fingerprint_size": 64, "hamming_threshold": 24}
 
+DEBUG_HELP_TEXT = """[bold cyan]Debug Mode Commands[/bold cyan]
+
+[yellow]/inspect <rank>[/yellow]
+  Show detailed analysis of a retrieved chunk
+
+[yellow]/multicompare[/yellow]
+  Compare current query across all methods with overlap analysis
+
+[yellow]/params [method][/yellow]
+  Show parameter analysis and tuning guidance
+
+[yellow]/export[/yellow]
+  Export current debug session to JSON
+
+All regular commands still work in debug mode.
+"""
+
+try:
+    from app.terminal.debug_ui import (
+        compare_retrieval_results,
+        export_debug_session,
+        show_chunk_details,
+        show_parameter_analysis,
+    )
+except Exception:
+    compare_retrieval_results = None
+    export_debug_session = None
+    show_chunk_details = None
+    show_parameter_analysis = None
+
 
 @dataclass
 class SearchResponse:
@@ -238,11 +268,13 @@ class TerminalQAApp:
         chunks_path: Path | None = None,
         top_k: int = DEFAULT_TOP_K,
         history_file: Path | None = None,
+        debug: bool = False,
     ) -> None:
         self.console = console or Console()
         self.project_root = project_root or Path.cwd()
         self.chunks_path = chunks_path or self.project_root / "data" / "processed" / "chunks.json"
         self.top_k = top_k
+        self.debug = debug
         self.state = SessionState(history_file=history_file or self.project_root / HISTORY_FILE)
         self.state.load_history()
         self.engine = RetrievalEngine(project_root=self.project_root, chunks_path=self.chunks_path)
@@ -379,7 +411,7 @@ class TerminalQAApp:
             try:
                 with patch_stdout():
                     user_input = self.session.prompt(
-                        HTML("<prompt>nust-qa</prompt> ❯ "),
+                        HTML(f"<prompt>{'nust-qa [DEBUG]' if self.debug else 'nust-qa'}</prompt> ❯ "),
                         prompt_continuation="... ",
                     )
             except KeyboardInterrupt:
@@ -478,6 +510,22 @@ class TerminalQAApp:
             self._compare_methods()
             return True
 
+        if self.debug and command == "/inspect":
+            self._inspect_result(args)
+            return True
+
+        if self.debug and command == "/multicompare":
+            self._multi_compare_debug()
+            return True
+
+        if self.debug and command == "/params":
+            self._show_params(args)
+            return True
+
+        if command == "/debug-help":
+            self._render_debug_help()
+            return True
+
         if command == "/history":
             self._render_history()
             return True
@@ -566,6 +614,92 @@ class TerminalQAApp:
             marker = "->" if method == self.state.current_method else ""
             table.add_row(marker, method, loaded)
         self.console.print(table)
+
+    def _inspect_result(self, args: list[str]) -> None:
+        if not self.state.last_results:
+            self.console.print(
+                Panel(
+                    "No results to inspect. Run a query first.",
+                    border_style="yellow",
+                    box=ROUNDED,
+                )
+            )
+            return
+        if not args:
+            self.console.print(Panel("Usage: /inspect <rank>", border_style="yellow", box=ROUNDED))
+            return
+        try:
+            rank = int(args[0])
+        except ValueError:
+            self.console.print(Panel("Usage: /inspect <rank>", border_style="red", box=ROUNDED))
+            return
+        if rank < 1 or rank > len(self.state.last_results):
+            self.console.print(
+                Panel(
+                    f"Rank must be 1-{len(self.state.last_results)}.",
+                    border_style="red",
+                    box=ROUNDED,
+                )
+            )
+            return
+        if show_chunk_details is None:
+            self.console.print(Panel("Debug UI is not available.", border_style="red", box=ROUNDED))
+            return
+        show_chunk_details(self.state.last_results[rank - 1], rank)
+
+    def _multi_compare_debug(self) -> None:
+        if not self.state.last_query:
+            self.console.print(
+                Panel(
+                    "No query to compare. Ask something first.",
+                    border_style="yellow",
+                    box=ROUNDED,
+                )
+            )
+            return
+        if compare_retrieval_results is None:
+            self.console.print(Panel("Debug UI is not available.", border_style="red", box=ROUNDED))
+            return
+        all_results: dict[str, list[dict[str, Any]]] = {}
+        with self.console.status("[dim]Running query on all methods...[/dim]", spinner="dots"):
+            for method in SUPPORTED_METHODS:
+                all_results[method] = self.engine.search(method, self.state.last_query, self.top_k).chunks
+        compare_retrieval_results(self.state.last_query, all_results)
+
+    def _show_params(self, args: list[str]) -> None:
+        method = args[0].lower() if args else self.state.current_method
+        if show_parameter_analysis is None:
+            self.console.print(Panel("Debug UI is not available.", border_style="red", box=ROUNDED))
+            return
+        if method == "minhash":
+            show_parameter_analysis("minhash", MINHASH_DEFAULTS)
+            return
+        if method == "simhash":
+            show_parameter_analysis("simhash", SIMHASH_DEFAULTS)
+            return
+        if method == "baseline":
+            show_parameter_analysis("baseline", {})
+            return
+        self.console.print(
+            Panel(
+                f"Unknown method: {method}",
+                subtitle=f"Choose from: {', '.join(SUPPORTED_METHODS)}",
+                border_style="red",
+                box=ROUNDED,
+            )
+        )
+
+    def _render_debug_help(self) -> None:
+        if not self.debug:
+            self.console.print(
+                Panel(
+                    "Debug mode is off. Start with --debug to enable extra analysis commands.",
+                    border_style="yellow",
+                    box=ROUNDED,
+                )
+            )
+            return
+        self.console.print(Panel(DEBUG_HELP_TEXT, border_style="cyan", box=ROUNDED, title="Debug Commands"))
 
     def _compare_methods(self) -> None:
         if not self.state.last_query:
@@ -709,6 +843,15 @@ class TerminalQAApp:
                 box=ROUNDED,
             )
         )
+        if self.debug and export_debug_session is not None:
+            export_debug_session(
+                self.state.last_query,
+                {
+                    "method": self.state.current_method,
+                    "results": self.state.last_results,
+                },
+                filename=f"debug_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json",
+            )
         return filename
 
     def render_error(self, exc: Exception, title: str, suggestion: str) -> None:
@@ -737,13 +880,15 @@ class TerminalQAApp:
 @click.option("--top-k", default=DEFAULT_TOP_K, show_default=True, type=int)
 @click.option("--query", default=None, help="Run a single query and exit.")
 @click.option("--history-file", default=HISTORY_FILE, show_default=True, type=click.Path(path_type=Path))
-def main(chunks_path: Path, top_k: int, query: str | None, history_file: Path) -> None:
+@click.option("--debug", is_flag=True, help="Enable debug mode with extra analysis commands.")
+def main(chunks_path: Path, top_k: int, query: str | None, history_file: Path, debug: bool) -> None:
     """Launch the NUST QA terminal interface."""
     app = TerminalQAApp(
         project_root=Path.cwd(),
         chunks_path=Path.cwd() / chunks_path,
         top_k=top_k,
         history_file=Path.cwd() / history_file,
+        debug=debug,
     )
 
     if query:

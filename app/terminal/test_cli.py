@@ -93,6 +93,22 @@ def test_history_and_expand_commands_do_not_crash(tmp_path: Path) -> None:
     assert app.handle_command("/compare") is True
 
 
+def test_debug_commands_do_not_crash(tmp_path: Path) -> None:
+    app = TerminalQAApp(
+        console=Console(record=True, width=120),
+        project_root=tmp_path,
+        chunks_path=tmp_path / "chunks.json",
+        history_file=tmp_path / ".history.json",
+        debug=True,
+    )
+    app.engine = DummyEngine()
+    app.process_query("attendance")
+    assert app.handle_command("/inspect 1") is True
+    assert app.handle_command("/multicompare") is True
+    assert app.handle_command("/params minhash") is True
+    assert app.handle_command("/debug-help") is True
+
+
 def test_invalid_method_command_is_handled(tmp_path: Path) -> None:
     app = make_app(tmp_path)
     assert app.handle_command("/method unsupported") is True
