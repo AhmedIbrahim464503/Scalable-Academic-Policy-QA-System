@@ -1,0 +1,77 @@
+[
+  {
+    "id": 1,
+    "query": "What is the minimum GPA requirement?",
+    "category": "gpa"
+  },
+  {
+    "id": 2,
+    "query": "What happens if a student fails a course?",
+    "category": "failure"
+  },
+  {
+    "id": 3,
+    "query": "What is the attendance policy?",
+    "category": "attendance"
+  },
+  {
+    "id": 4,
+    "query": "How many times can a course be repeated?",
+    "category": "repetition"
+  },
+  {
+    "id": 5,
+    "query": "What are the degree requirements?",
+    "category": "graduation"
+  },
+  {
+    "id": 6,
+    "query": "What is the policy on academic probation?",
+    "category": "probation"
+  },
+  {
+    "id": 7,
+    "query": "How is GPA calculated?",
+    "category": "calculation"
+  },
+  {
+    "id": 8,
+    "query": "What is the process for grade appeals?",
+    "category": "appeals"
+  },
+  {
+    "id": 9,
+    "query": "What is the withdrawal policy?",
+    "category": "withdrawal"
+  },
+  {
+    "id": 10,
+    "query": "What are the requirements for honors?",
+    "category": "honors"
+  },
+  {
+    "id": 11,
+    "query": "What is the policy on academic integrity?",
+    "category": "integrity"
+  },
+  {
+    "id": 12,
+    "query": "How many credits are required to graduate?",
+    "category": "credits"
+  },
+  {
+    "id": 13,
+    "query": "What is the maximum course load per semester?",
+    "category": "load"
+  },
+  {
+    "id": 14,
+    "query": "What happens if attendance falls below requirement?",
+    "category": "attendance_low"
+  },
+  {
+    "id": 15,
+    "query": "What is the exam retake policy?",
+    "category": "retake"
+  }
+]

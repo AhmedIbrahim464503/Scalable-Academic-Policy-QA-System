@@ -2,6 +2,8 @@
 __pycache__/
 *.py[cod]
 *$py.class
+*.so
+.Python
 *.pyd
 *.pyo
 
@@ -35,14 +37,17 @@ htmlcov/
 # Streamlit
 .streamlit/secrets.toml
 
-# Environment files
+# Environment
 .env
+.env.local
 
 # Local terminal app session history
 .nust_qa_history
 .nust_qa_history.prompt
 
-# Project data artifacts
+# Data
+data/raw/*.pdf
+*.json.backup
 data/index/
 
 # OS / editors
@@ -50,3 +55,10 @@ data/index/
 Thumbs.db
 .idea/
 .vscode/
+*.swp
+*.swo
+
+# Outputs
+*.log
+experiments/*.png
+experiments/*.pdf
