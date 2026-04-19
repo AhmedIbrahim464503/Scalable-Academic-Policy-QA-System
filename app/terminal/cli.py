@@ -45,9 +45,13 @@ from app.terminal.ui_components import (
     render_help,
     render_query_result,
 )
+from src.lsh_minhash import MinHashRetriever
+from src.lsh_simhash import SimHashRetriever
 
 APP_VERSION = "0.1.0"
 SUPPORTED_METHODS = ("baseline", "minhash", "simhash")
+MINHASH_DEFAULTS = {"num_perm": 64, "threshold": 0.3, "shingle_size": 3}
+SIMHASH_DEFAULTS = {"fingerprint_size": 64, "hamming_threshold": 24}
 
 
 @dataclass
@@ -65,9 +69,12 @@ class RetrievalEngine:
         self.project_root = project_root
         self.chunks_path = chunks_path
         self._cache: dict[str, Any] = {}
+        self._chunks_cache: list[dict[str, Any]] | None = None
         self.chunk_count = 0
 
     def _load_chunks(self) -> list[dict[str, Any]]:
+        if self._chunks_cache is not None:
+            return self._chunks_cache
         if not self.chunks_path.exists():
             raise FileNotFoundError(
                 f"Chunk file not found at {self.chunks_path}. Add data/processed/chunks.json first."
@@ -76,7 +83,8 @@ class RetrievalEngine:
         if not isinstance(data, list):
             raise ValueError("chunks.json must contain a top-level list.")
         self.chunk_count = len(data)
-        return [item for item in data if isinstance(item, dict)]
+        self._chunks_cache = [item for item in data if isinstance(item, dict)]
+        return self._chunks_cache
 
     def _load_baseline_class(self) -> type[Any]:
         try:
@@ -127,28 +135,33 @@ class RetrievalEngine:
         if method in self._cache:
             return self._cache[method]
 
-        if method != "baseline":
-            raise NotImplementedError(
-                f"Method '{method}' is not implemented yet. Only baseline is currently wired."
-            )
-
         chunks = self._load_chunks()
-        baseline_cls = self._load_baseline_class()
-        model = self._instantiate_baseline(baseline_cls, chunks)
 
-        # If the baseline exposes a load/build hook, run it once during startup.
-        for hook_name in ("load", "build", "fit", "initialize"):
-            hook = getattr(model, hook_name, None)
-            if callable(hook):
-                signature = inspect.signature(hook)
-                try:
-                    if len(signature.parameters) == 0:
-                        hook()
-                    elif len(signature.parameters) == 1:
-                        hook(chunks)
-                except Exception:
-                    pass
-                break
+        if method == "baseline":
+            baseline_cls = self._load_baseline_class()
+            model = self._instantiate_baseline(baseline_cls, chunks)
+
+            # If the baseline exposes a load/build hook, run it once during startup.
+            for hook_name in ("load", "build", "fit", "initialize"):
+                hook = getattr(model, hook_name, None)
+                if callable(hook):
+                    signature = inspect.signature(hook)
+                    try:
+                        if len(signature.parameters) == 0:
+                            hook()
+                        elif len(signature.parameters) == 1:
+                            hook(chunks)
+                    except Exception:
+                        pass
+                    break
+        elif method == "minhash":
+            model = MinHashRetriever(**MINHASH_DEFAULTS)
+            model.create_index(chunks)
+        elif method == "simhash":
+            model = SimHashRetriever(**SIMHASH_DEFAULTS)
+            model.create_index(chunks)
+        else:
+            raise NotImplementedError(f"Method '{method}' is not supported.")
 
         self._cache[method] = model
         return model
@@ -240,6 +253,8 @@ class TerminalQAApp:
             "/help",
             "/history",
             "/stats",
+            "/methods",
+            "/compare",
             "/export",
             "/clear",
             "/quit",
@@ -316,11 +331,32 @@ class TerminalQAApp:
 
     def initialize(self) -> None:
         self.console.print(self.header_panel)
-        spinner = create_progress_spinner("Initializing baseline model...")
-        with spinner:
-            task = spinner.add_task("init", total=None)
-            self.engine.load_method("baseline")
-            spinner.update(task, description="Baseline ready")
+        self.console.print(
+            Panel(
+                Text("Loading retrieval methods...", style=COLOR_SCHEME["accent"]),
+                border_style=COLOR_SCHEME["border"],
+                box=ROUNDED,
+            )
+        )
+
+        load_plan = [
+            ("baseline", "Loading TF-IDF baseline..."),
+            ("minhash", "Building MinHash index..."),
+            ("simhash", "Building SimHash index..."),
+        ]
+        for method_name, message in load_plan:
+            spinner = create_progress_spinner(message)
+            with spinner:
+                task = spinner.add_task(method_name, total=None)
+                self.engine.load_method(method_name)
+                spinner.update(task, description=f"{method_name} ready")
+            self.console.print(
+                Panel(
+                    Text(f"{method_name} ready", style=COLOR_SCHEME["success"]),
+                    border_style=COLOR_SCHEME["border"],
+                    box=ROUNDED,
+                )
+            )
 
         self.console.print(
             Panel(
@@ -434,6 +470,14 @@ class TerminalQAApp:
         if command == "/method":
             return self._handle_method_command(args)
 
+        if command == "/methods":
+            self._render_methods()
+            return True
+
+        if command == "/compare":
+            self._compare_methods()
+            return True
+
         if command == "/history":
             self._render_history()
             return True
@@ -473,7 +517,7 @@ class TerminalQAApp:
             self.console.print(
                 Panel(
                     f"Current method: {self.state.current_method}",
-                    subtitle="Usage: /method baseline",
+                    subtitle=f"Usage: /method {'|'.join(SUPPORTED_METHODS)}",
                     border_style="yellow",
                     box=ROUNDED,
                 )
@@ -510,6 +554,55 @@ class TerminalQAApp:
             )
         )
         return True
+
+    def _render_methods(self) -> None:
+        table = Table(box=ROUNDED, title="Retrieval Methods")
+        table.add_column("Active", style=COLOR_SCHEME["accent"], width=8)
+        table.add_column("Method", style=COLOR_SCHEME["header"])
+        table.add_column("Status", style=COLOR_SCHEME["system"])
+
+        for method in SUPPORTED_METHODS:
+            loaded = "loaded" if method in self.engine._cache else "ready"
+            marker = "->" if method == self.state.current_method else ""
+            table.add_row(marker, method, loaded)
+        self.console.print(table)
+
+    def _compare_methods(self) -> None:
+        if not self.state.last_query:
+            self.console.print(
+                Panel(
+                    "No previous query to compare.",
+                    subtitle="Run a query first, then use /compare.",
+                    border_style="yellow",
+                    box=ROUNDED,
+                )
+            )
+            return
+
+        comparison_rows: list[tuple[str, SearchResponse]] = []
+        with self.console.status("[dim]Comparing all retrieval methods...[/dim]", spinner="dots"):
+            for method in SUPPORTED_METHODS:
+                comparison_rows.append((method, self.engine.search(method, self.state.last_query, self.top_k)))
+
+        table = Table(box=ROUNDED, title=f"Comparison: {self.state.last_query}")
+        table.add_column("Method", style=COLOR_SCHEME["header"])
+        table.add_column("Latency", style=COLOR_SCHEME["score"])
+        table.add_column("Results", style=COLOR_SCHEME["success"])
+        table.add_column("Top Page", style=COLOR_SCHEME["page"])
+        table.add_column("Top Score", style=COLOR_SCHEME["accent"])
+
+        for method, response in comparison_rows:
+            top_page = response.chunks[0]["page"] if response.chunks else "n/a"
+            top_score = f"{float(response.chunks[0]['score']):.4f}" if response.chunks else "n/a"
+            table.add_row(
+                method,
+                f"{response.latency * 1000:.1f} ms",
+                str(len(response.chunks)),
+                str(top_page),
+                top_score,
+            )
+
+        self.console.print(table)
 
     def _render_history(self) -> None:
         table = Table(box=ROUNDED, title="Query History")

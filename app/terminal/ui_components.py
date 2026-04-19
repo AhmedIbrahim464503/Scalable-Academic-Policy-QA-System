@@ -116,6 +116,8 @@ def render_help() -> Panel:
     command_table.add_column("Description", style=COLOR_SCHEME["system"])
     command_table.add_row("/help", "Show this help screen.")
     command_table.add_row("/method [baseline|minhash|simhash]", "Switch retrieval mode.")
+    command_table.add_row("/methods", "List loaded retrieval methods.")
+    command_table.add_row("/compare", "Compare all methods on the last query.")
     command_table.add_row("/history", "Show recent query history.")
     command_table.add_row("/export", "Export current results to JSON.")
     command_table.add_row("/stats", "Show session statistics.")
@@ -211,4 +213,3 @@ def render_query_result(query: str, chunks: list[dict[str, object]], metrics: di
         count=len(chunks),
     )
     return Group(answer_panel, sources_panel, footer)
-

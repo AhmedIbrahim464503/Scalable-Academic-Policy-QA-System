@@ -20,12 +20,12 @@ class DummyEngine:
     def __init__(self) -> None:
         self.chunk_count = 3
         self.loaded_methods: list[str] = []
+        self._cache: dict[str, object] = {}
 
     def load_method(self, method: str) -> object:
         self.loaded_methods.append(method)
-        if method != "baseline":
-            raise NotImplementedError("not implemented")
-        return object()
+        self._cache[method] = object()
+        return self._cache[method]
 
     def search(self, method: str, query: str, top_k: int = 5):  # noqa: ARG002
         from app.terminal.cli import SearchResponse
@@ -89,6 +89,8 @@ def test_history_and_expand_commands_do_not_crash(tmp_path: Path) -> None:
     app.process_query("attendance")
     assert app.handle_command("/history") is True
     assert app.handle_command("/expand 1") is True
+    assert app.handle_command("/methods") is True
+    assert app.handle_command("/compare") is True
 
 
 def test_invalid_method_command_is_handled(tmp_path: Path) -> None:

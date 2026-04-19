@@ -1,0 +1,572 @@
+[
+  {
+    "query": "What is the minimum GPA requirement?",
+    "methods": {
+      "baseline": {
+        "latency_ms": 2.937600002042018,
+        "num_results": 5,
+        "chunk_ids": [
+          "chunk_216",
+          "chunk_207",
+          "chunk_236",
+          "chunk_242",
+          "chunk_206"
+        ]
+      },
+      "minhash": {
+        "latency_ms": 4.377099990961142,
+        "num_results": 5,
+        "chunk_ids": [
+          "chunk_83",
+          "chunk_41",
+          "chunk_71",
+          "chunk_72",
+          "chunk_87"
+        ]
+      },
+      "simhash": {
+        "latency_ms": 3.6511999933281913,
+        "num_results": 5,
+        "chunk_ids": [
+          "chunk_324",
+          "chunk_138",
+          "chunk_245",
+          "chunk_154",
+          "chunk_314"
+        ]
+      }
+    }
+  },
+  {
+    "query": "What happens if a student fails a course?",
+    "methods": {
+      "baseline": {
+        "latency_ms": 3.1736999953864142,
+        "num_results": 5,
+        "chunk_ids": [
+          "chunk_229",
+          "chunk_245",
+          "chunk_64",
+          "chunk_71",
+          "chunk_218"
+        ]
+      },
+      "minhash": {
+        "latency_ms": 3.993799997260794,
+        "num_results": 5,
+        "chunk_ids": [
+          "chunk_283",
+          "chunk_351",
+          "chunk_80",
+          "chunk_187",
+          "chunk_59"
+        ]
+      },
+      "simhash": {
+        "latency_ms": 3.6968000058550388,
+        "num_results": 5,
+        "chunk_ids": [
+          "chunk_283",
+          "chunk_335",
+          "chunk_173",
+          "chunk_339",
+          "chunk_67"
+        ]
+      }
+    }
+  },
+  {
+    "query": "What is the attendance policy?",
+    "methods": {
+      "baseline": {
+        "latency_ms": 3.0248999973991886,
+        "num_results": 5,
+        "chunk_ids": [
+          "chunk_19",
+          "chunk_45",
+          "chunk_70",
+          "chunk_164",
+          "chunk_323"
+        ]
+      },
+      "minhash": {
+        "latency_ms": 3.5752999974647537,
+        "num_results": 5,
+        "chunk_ids": [
+          "chunk_71",
+          "chunk_83",
+          "chunk_48",
+          "chunk_70",
+          "chunk_76"
+        ]
+      },
+      "simhash": {
+        "latency_ms": 1.984899994567968,
+        "num_results": 5,
+        "chunk_ids": [
+          "chunk_309",
+          "chunk_280",
+          "chunk_110",
+          "chunk_114",
+          "chunk_138"
+        ]
+      }
+    }
+  },
+  {
+    "query": "How many times can a course be repeated?",
+    "methods": {
+      "baseline": {
+        "latency_ms": 2.7916999970329925,
+        "num_results": 5,
+        "chunk_ids": [
+          "chunk_37",
+          "chunk_80",
+          "chunk_64",
+          "chunk_231",
+          "chunk_219"
+        ]
+      },
+      "minhash": {
+        "latency_ms": 4.164700003457256,
+        "num_results": 5,
+        "chunk_ids": [
+          "chunk_65",
+          "chunk_145",
+          "chunk_23",
+          "chunk_32",
+          "chunk_37"
+        ]
+      },
+      "simhash": {
+        "latency_ms": 3.2118000090122223,
+        "num_results": 5,
+        "chunk_ids": [
+          "chunk_124",
+          "chunk_155",
+          "chunk_21",
+          "chunk_120",
+          "chunk_195"
+        ]
+      }
+    }
+  },
+  {
+    "query": "What are the degree requirements?",
+    "methods": {
+      "baseline": {
+        "latency_ms": 3.2676000118954107,
+        "num_results": 5,
+        "chunk_ids": [
+          "chunk_91",
+          "chunk_82",
+          "chunk_40",
+          "chunk_219",
+          "chunk_214"
+        ]
+      },
+      "minhash": {
+        "latency_ms": 4.680400001234375,
+        "num_results": 5,
+        "chunk_ids": [
+          "chunk_83",
+          "chunk_234",
+          "chunk_268",
+          "chunk_71",
+          "chunk_98"
+        ]
+      },
+      "simhash": {
+        "latency_ms": 3.6517999978968874,
+        "num_results": 5,
+        "chunk_ids": [
+          "chunk_87",
+          "chunk_128",
+          "chunk_47",
+          "chunk_119",
+          "chunk_127"
+        ]
+      }
+    }
+  },
+  {
+    "query": "What is the policy on academic probation?",
+    "methods": {
+      "baseline": {
+        "latency_ms": 2.6225000037811697,
+        "num_results": 5,
+        "chunk_ids": [
+          "chunk_32",
+          "chunk_75",
+          "chunk_33",
+          "chunk_217",
+          "chunk_227"
+        ]
+      },
+      "minhash": {
+        "latency_ms": 2.5022000045282766,
+        "num_results": 5,
+        "chunk_ids": [
+          "chunk_33",
+          "chunk_37",
+          "chunk_68",
+          "chunk_71",
+          "chunk_73"
+        ]
+      },
+      "simhash": {
+        "latency_ms": 1.9115999893983826,
+        "num_results": 5,
+        "chunk_ids": [
+          "chunk_341",
+          "chunk_133",
+          "chunk_7",
+          "chunk_314",
+          "chunk_322"
+        ]
+      }
+    }
+  },
+  {
+    "query": "How is GPA calculated?",
+    "methods": {
+      "baseline": {
+        "latency_ms": 1.9897000020137057,
+        "num_results": 5,
+        "chunk_ids": [
+          "chunk_242",
+          "chunk_216",
+          "chunk_232",
+          "chunk_88",
+          "chunk_246"
+        ]
+      },
+      "minhash": {
+        "latency_ms": 2.5095000019064173,
+        "num_results": 5,
+        "chunk_ids": [
+          "chunk_87",
+          "chunk_183",
+          "chunk_347",
+          "chunk_1",
+          "chunk_24"
+        ]
+      },
+      "simhash": {
+        "latency_ms": 1.8008999904850498,
+        "num_results": 5,
+        "chunk_ids": [
+          "chunk_249",
+          "chunk_80",
+          "chunk_164",
+          "chunk_322",
+          "chunk_34"
+        ]
+      }
+    }
+  },
+  {
+    "query": "What is the process for grade appeals?",
+    "methods": {
+      "baseline": {
+        "latency_ms": 2.073199997539632,
+        "num_results": 5,
+        "chunk_ids": [
+          "chunk_229",
+          "chunk_146",
+          "chunk_70",
+          "chunk_230",
+          "chunk_305"
+        ]
+      },
+      "minhash": {
+        "latency_ms": 2.843499998562038,
+        "num_results": 5,
+        "chunk_ids": [
+          "chunk_83",
+          "chunk_24",
+          "chunk_71",
+          "chunk_207",
+          "chunk_1"
+        ]
+      },
+      "simhash": {
+        "latency_ms": 3.0251999996835366,
+        "num_results": 5,
+        "chunk_ids": [
+          "chunk_319",
+          "chunk_24",
+          "chunk_316",
+          "chunk_138",
+          "chunk_169"
+        ]
+      }
+    }
+  },
+  {
+    "query": "What is the withdrawal policy?",
+    "methods": {
+      "baseline": {
+        "latency_ms": 2.8763000009348616,
+        "num_results": 5,
+        "chunk_ids": [
+          "chunk_78",
+          "chunk_227",
+          "chunk_33",
+          "chunk_36",
+          "chunk_62"
+        ]
+      },
+      "minhash": {
+        "latency_ms": 3.2371999986935407,
+        "num_results": 5,
+        "chunk_ids": [
+          "chunk_83",
+          "chunk_71",
+          "chunk_1",
+          "chunk_24",
+          "chunk_26"
+        ]
+      },
+      "simhash": {
+        "latency_ms": 1.96460000006482,
+        "num_results": 5,
+        "chunk_ids": [
+          "chunk_337",
+          "chunk_285",
+          "chunk_138",
+          "chunk_246",
+          "chunk_307"
+        ]
+      }
+    }
+  },
+  {
+    "query": "What are the requirements for honors?",
+    "methods": {
+      "baseline": {
+        "latency_ms": 3.0378000083146617,
+        "num_results": 5,
+        "chunk_ids": [
+          "chunk_213",
+          "chunk_63",
+          "chunk_325",
+          "chunk_251",
+          "chunk_347"
+        ]
+      },
+      "minhash": {
+        "latency_ms": 4.819099995074794,
+        "num_results": 5,
+        "chunk_ids": [
+          "chunk_83",
+          "chunk_174",
+          "chunk_336",
+          "chunk_0",
+          "chunk_1"
+        ]
+      },
+      "simhash": {
+        "latency_ms": 2.8157000051578507,
+        "num_results": 5,
+        "chunk_ids": [
+          "chunk_119",
+          "chunk_196",
+          "chunk_9",
+          "chunk_98",
+          "chunk_99"
+        ]
+      }
+    }
+  },
+  {
+    "query": "What is the policy on academic integrity?",
+    "methods": {
+      "baseline": {
+        "latency_ms": 3.3411000040359795,
+        "num_results": 5,
+        "chunk_ids": [
+          "chunk_292",
+          "chunk_131",
+          "chunk_33",
+          "chunk_6",
+          "chunk_193"
+        ]
+      },
+      "minhash": {
+        "latency_ms": 4.624799999874085,
+        "num_results": 5,
+        "chunk_ids": [
+          "chunk_33",
+          "chunk_37",
+          "chunk_71",
+          "chunk_73",
+          "chunk_83"
+        ]
+      },
+      "simhash": {
+        "latency_ms": 3.6065999884158373,
+        "num_results": 5,
+        "chunk_ids": [
+          "chunk_90",
+          "chunk_207",
+          "chunk_71",
+          "chunk_84",
+          "chunk_105"
+        ]
+      }
+    }
+  },
+  {
+    "query": "How many credits are required to graduate?",
+    "methods": {
+      "baseline": {
+        "latency_ms": 2.6978000096278265,
+        "num_results": 5,
+        "chunk_ids": [
+          "chunk_224",
+          "chunk_225",
+          "chunk_234",
+          "chunk_235",
+          "chunk_24"
+        ]
+      },
+      "minhash": {
+        "latency_ms": 4.55820000206586,
+        "num_results": 5,
+        "chunk_ids": [
+          "chunk_83",
+          "chunk_85",
+          "chunk_174",
+          "chunk_336",
+          "chunk_0"
+        ]
+      },
+      "simhash": {
+        "latency_ms": 3.6127999919699505,
+        "num_results": 5,
+        "chunk_ids": [
+          "chunk_279",
+          "chunk_114",
+          "chunk_103",
+          "chunk_235",
+          "chunk_285"
+        ]
+      }
+    }
+  },
+  {
+    "query": "What is the maximum course load per semester?",
+    "methods": {
+      "baseline": {
+        "latency_ms": 2.6919000083580613,
+        "num_results": 5,
+        "chunk_ids": [
+          "chunk_254",
+          "chunk_231",
+          "chunk_84",
+          "chunk_27",
+          "chunk_73"
+        ]
+      },
+      "minhash": {
+        "latency_ms": 4.750499996589497,
+        "num_results": 5,
+        "chunk_ids": [
+          "chunk_83",
+          "chunk_59",
+          "chunk_71",
+          "chunk_72",
+          "chunk_73"
+        ]
+      },
+      "simhash": {
+        "latency_ms": 2.374300005612895,
+        "num_results": 5,
+        "chunk_ids": [
+          "chunk_166",
+          "chunk_148",
+          "chunk_194",
+          "chunk_150",
+          "chunk_159"
+        ]
+      }
+    }
+  },
+  {
+    "query": "What happens if attendance falls below requirement?",
+    "methods": {
+      "baseline": {
+        "latency_ms": 2.654600000823848,
+        "num_results": 5,
+        "chunk_ids": [
+          "chunk_45",
+          "chunk_19",
+          "chunk_207",
+          "chunk_164",
+          "chunk_70"
+        ]
+      },
+      "minhash": {
+        "latency_ms": 4.005199996754527,
+        "num_results": 5,
+        "chunk_ids": [
+          "chunk_20",
+          "chunk_25",
+          "chunk_39",
+          "chunk_42",
+          "chunk_48"
+        ]
+      },
+      "simhash": {
+        "latency_ms": 3.2783000060589984,
+        "num_results": 5,
+        "chunk_ids": [
+          "chunk_63",
+          "chunk_339",
+          "chunk_123",
+          "chunk_181",
+          "chunk_44"
+        ]
+      }
+    }
+  },
+  {
+    "query": "What is the exam retake policy?",
+    "methods": {
+      "baseline": {
+        "latency_ms": 3.1931999983498827,
+        "num_results": 5,
+        "chunk_ids": [
+          "chunk_244",
+          "chunk_276",
+          "chunk_111",
+          "chunk_116",
+          "chunk_115"
+        ]
+      },
+      "minhash": {
+        "latency_ms": 4.672800001571886,
+        "num_results": 5,
+        "chunk_ids": [
+          "chunk_83",
+          "chunk_50",
+          "chunk_52",
+          "chunk_71",
+          "chunk_116"
+        ]
+      },
+      "simhash": {
+        "latency_ms": 3.5653000086313114,
+        "num_results": 5,
+        "chunk_ids": [
+          "chunk_256",
+          "chunk_158",
+          "chunk_241",
+          "chunk_278",
+          "chunk_84"
+        ]
+      }
+    }
+  }
+]

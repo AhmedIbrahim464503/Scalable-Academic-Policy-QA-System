@@ -1,0 +1,131 @@
+{
+  "minhash": [
+    {
+      "num_perm": 64,
+      "threshold": 0.3,
+      "shingle_size": 2,
+      "avg_latency_ms": 5.238026667696734,
+      "avg_overlap": 0.05333333333333334
+    },
+    {
+      "num_perm": 64,
+      "threshold": 0.3,
+      "shingle_size": 3,
+      "avg_latency_ms": 2.244260001073902,
+      "avg_overlap": 0.08
+    },
+    {
+      "num_perm": 64,
+      "threshold": 0.4,
+      "shingle_size": 2,
+      "avg_latency_ms": 1.9477000013769914,
+      "avg_overlap": 0.05333333333333334
+    },
+    {
+      "num_perm": 64,
+      "threshold": 0.4,
+      "shingle_size": 3,
+      "avg_latency_ms": 1.9909466694419582,
+      "avg_overlap": 0.08
+    },
+    {
+      "num_perm": 64,
+      "threshold": 0.5,
+      "shingle_size": 2,
+      "avg_latency_ms": 1.877160001701365,
+      "avg_overlap": 0.05333333333333334
+    },
+    {
+      "num_perm": 64,
+      "threshold": 0.5,
+      "shingle_size": 3,
+      "avg_latency_ms": 1.9371666702985142,
+      "avg_overlap": 0.08
+    },
+    {
+      "num_perm": 128,
+      "threshold": 0.3,
+      "shingle_size": 2,
+      "avg_latency_ms": 2.3604066664120182,
+      "avg_overlap": 0.05333333333333334
+    },
+    {
+      "num_perm": 128,
+      "threshold": 0.3,
+      "shingle_size": 3,
+      "avg_latency_ms": 2.513179999853795,
+      "avg_overlap": 0.06666666666666667
+    },
+    {
+      "num_perm": 128,
+      "threshold": 0.4,
+      "shingle_size": 2,
+      "avg_latency_ms": 2.417673334518137,
+      "avg_overlap": 0.05333333333333334
+    },
+    {
+      "num_perm": 128,
+      "threshold": 0.4,
+      "shingle_size": 3,
+      "avg_latency_ms": 2.3357733337131017,
+      "avg_overlap": 0.06666666666666667
+    },
+    {
+      "num_perm": 128,
+      "threshold": 0.5,
+      "shingle_size": 2,
+      "avg_latency_ms": 2.1741266653407365,
+      "avg_overlap": 0.05333333333333334
+    },
+    {
+      "num_perm": 128,
+      "threshold": 0.5,
+      "shingle_size": 3,
+      "avg_latency_ms": 2.37605333289442,
+      "avg_overlap": 0.06666666666666667
+    }
+  ],
+  "simhash": [
+    {
+      "fingerprint_size": 64,
+      "hamming_threshold": 16,
+      "avg_latency_ms": 3.129553335990446,
+      "avg_overlap": 0.013333333333333334
+    },
+    {
+      "fingerprint_size": 64,
+      "hamming_threshold": 20,
+      "avg_latency_ms": 2.2497533325804397,
+      "avg_overlap": 0.013333333333333334
+    },
+    {
+      "fingerprint_size": 64,
+      "hamming_threshold": 24,
+      "avg_latency_ms": 1.4861200024218608,
+      "avg_overlap": 0.013333333333333334
+    },
+    {
+      "fingerprint_size": 64,
+      "hamming_threshold": 28,
+      "avg_latency_ms": 1.618100000390162,
+      "avg_overlap": 0.013333333333333334
+    },
+    {
+      "fingerprint_size": 64,
+      "hamming_threshold": 32,
+      "avg_latency_ms": 1.609333334878708,
+      "avg_overlap": 0.013333333333333334
+    }
+  ],
+  "recommended": {
+    "minhash": {
+      "num_perm": 64,
+      "threshold": 0.3,
+      "shingle_size": 3
+    },
+    "simhash": {
+      "fingerprint_size": 64,
+      "hamming_threshold": 24
+    }
+  }
+}
