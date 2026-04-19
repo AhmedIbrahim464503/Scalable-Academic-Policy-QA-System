@@ -4,6 +4,7 @@ scikit-learn
 numpy
 pandas
 datasketch
+simhash
 streamlit
 groq
 pytest

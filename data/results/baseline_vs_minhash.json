@@ -1,0 +1,137 @@
+[
+  {
+    "query": "What is the minimum GPA requirement?",
+    "baseline_time_ms": 2.179899995098822,
+    "minhash_time_ms": 2.354900003410876,
+    "speedup": 0.9256868622622697,
+    "overlap": 0.2,
+    "baseline_count": 5,
+    "minhash_count": 5
+  },
+  {
+    "query": "What happens if a student fails a course?",
+    "baseline_time_ms": 1.243499995325692,
+    "minhash_time_ms": 1.8210999987786636,
+    "speedup": 0.682829057250923,
+    "overlap": 0.0,
+    "baseline_count": 5,
+    "minhash_count": 5
+  },
+  {
+    "query": "What is the attendance policy?",
+    "baseline_time_ms": 1.0661999986041337,
+    "minhash_time_ms": 1.6133000026457012,
+    "speedup": 0.6608814212208758,
+    "overlap": 0.0,
+    "baseline_count": 5,
+    "minhash_count": 5
+  },
+  {
+    "query": "How many times can a course be repeated?",
+    "baseline_time_ms": 0.967200001468882,
+    "minhash_time_ms": 1.6540999931748956,
+    "speedup": 0.5847288588717232,
+    "overlap": 0.2,
+    "baseline_count": 5,
+    "minhash_count": 5
+  },
+  {
+    "query": "What are the degree requirements?",
+    "baseline_time_ms": 1.202899991767481,
+    "minhash_time_ms": 1.8214000010630116,
+    "speedup": 0.6604260409934338,
+    "overlap": 0.2,
+    "baseline_count": 5,
+    "minhash_count": 5
+  },
+  {
+    "query": "What is the policy on academic probation?",
+    "baseline_time_ms": 1.342599993222393,
+    "minhash_time_ms": 2.0120999979553744,
+    "speedup": 0.6672630558057234,
+    "overlap": 0.2,
+    "baseline_count": 5,
+    "minhash_count": 5
+  },
+  {
+    "query": "How is GPA calculated?",
+    "baseline_time_ms": 1.1400000075809658,
+    "minhash_time_ms": 1.6605999990133569,
+    "speedup": 0.6864988608083193,
+    "overlap": 0.0,
+    "baseline_count": 5,
+    "minhash_count": 5
+  },
+  {
+    "query": "What is the process for grade appeals?",
+    "baseline_time_ms": 0.9825000015553087,
+    "minhash_time_ms": 1.6432999982498586,
+    "speedup": 0.5978823115692127,
+    "overlap": 0.0,
+    "baseline_count": 5,
+    "minhash_count": 5
+  },
+  {
+    "query": "What is the withdrawal policy?",
+    "baseline_time_ms": 0.9303999977419153,
+    "minhash_time_ms": 1.5512999962083995,
+    "speedup": 0.5997550441667935,
+    "overlap": 0.0,
+    "baseline_count": 5,
+    "minhash_count": 5
+  },
+  {
+    "query": "What are the requirements for honors?",
+    "baseline_time_ms": 0.9233000018866733,
+    "minhash_time_ms": 1.8665999959921464,
+    "speedup": 0.4946426678823147,
+    "overlap": 0.0,
+    "baseline_count": 5,
+    "minhash_count": 5
+  },
+  {
+    "query": "What is the policy on academic integrity?",
+    "baseline_time_ms": 1.2489999935496598,
+    "minhash_time_ms": 1.8529999942984432,
+    "speedup": 0.6740420924947378,
+    "overlap": 0.2,
+    "baseline_count": 5,
+    "minhash_count": 5
+  },
+  {
+    "query": "How many credits are required to graduate?",
+    "baseline_time_ms": 1.0562000097706914,
+    "minhash_time_ms": 1.6682000132277608,
+    "speedup": 0.6331375143242416,
+    "overlap": 0.0,
+    "baseline_count": 5,
+    "minhash_count": 5
+  },
+  {
+    "query": "What is the maximum course load per semester?",
+    "baseline_time_ms": 0.9573999996064231,
+    "minhash_time_ms": 1.6299999988405034,
+    "speedup": 0.5873619633665443,
+    "overlap": 0.0,
+    "baseline_count": 5,
+    "minhash_count": 5
+  },
+  {
+    "query": "What happens if attendance falls below requirement?",
+    "baseline_time_ms": 0.9103000047616661,
+    "minhash_time_ms": 1.6060000052675605,
+    "speedup": 0.5668119562739413,
+    "overlap": 0.0,
+    "baseline_count": 5,
+    "minhash_count": 5
+  },
+  {
+    "query": "What is the exam retake policy?",
+    "baseline_time_ms": 0.9074999979929999,
+    "minhash_time_ms": 1.6143999964697286,
+    "speedup": 0.562128344881978,
+    "overlap": 0.0,
+    "baseline_count": 5,
+    "minhash_count": 5
+  }
+]
