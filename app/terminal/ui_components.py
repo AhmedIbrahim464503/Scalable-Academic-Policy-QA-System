@@ -164,19 +164,25 @@ def create_progress_spinner(message: str) -> Progress:
 
 def render_query_result(query: str, chunks: list[dict[str, object]], metrics: dict[str, object]) -> Group:
     """Render the full search result view with answer, sources, and footer."""
-    answer_text = Text(
-        metrics.get(
-            "answer",
-            "LLM answer generation is not enabled yet. Showing retrieved handbook evidence only.",
-        ),
-        style=COLOR_SCHEME["user_input"],
+    answer_body = Markdown(
+        str(
+            metrics.get(
+                "answer",
+                "LLM answer generation is not enabled yet. Showing retrieved handbook evidence only.",
+            )
+        )
     )
     answer_panel = Panel(
-        answer_text,
+        answer_body,
         title=f"[bold green]Answer[/bold green]  [dim]Query:[/dim] {query}",
         border_style=COLOR_SCHEME["border"],
         box=box.ROUNDED,
         padding=(1, 2),
+        subtitle=(
+            f"[cyan]Cited Pages:[/cyan] {', '.join(map(str, metrics.get('citations', [])))}"
+            if metrics.get("citations")
+            else None
+        ),
     )
 
     table = Table(box=box.SIMPLE_HEAVY, expand=True, show_lines=False)
@@ -208,9 +214,23 @@ def render_query_result(query: str, chunks: list[dict[str, object]], metrics: di
         padding=(1, 1),
     )
 
-    footer = render_metrics(
-        latency=float(metrics.get("latency", 0.0)),
-        method=str(metrics.get("method", "baseline")),
-        count=len(chunks),
+    metric_text = Text.assemble(
+        ("query time ", COLOR_SCHEME["system"]),
+        (f"{float(metrics.get('latency', 0.0)) * 1000:.1f} ms", COLOR_SCHEME["accent"]),
+        ("   ", COLOR_SCHEME["system"]),
+    )
+    llm_latency = float(metrics.get("llm_latency", 0.0))
+    if llm_latency > 0:
+        metric_text.append("llm time ", style=COLOR_SCHEME["system"])
+        metric_text.append(f"{llm_latency * 1000:.0f} ms", style="magenta")
+        metric_text.append("   ", style=COLOR_SCHEME["system"])
+    metric_text.append("results ", style=COLOR_SCHEME["system"])
+    metric_text.append(str(len(chunks)), style=COLOR_SCHEME["success"])
+    metric_text.append("   method ", style=COLOR_SCHEME["system"])
+    metric_text.append(str(metrics.get("method", "baseline")), style=COLOR_SCHEME["page"])
+    footer = Panel(
+        metric_text,
+        border_style=COLOR_SCHEME["border"],
+        box=box.MINIMAL,
     )
     return Group(answer_panel, sources_panel, footer)

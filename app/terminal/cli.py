@@ -32,6 +32,7 @@ from pygments.lexers.markup import MarkdownLexer
 from rich.box import ROUNDED
 from rich.console import Console
 from rich.live import Live
+from rich.markdown import Markdown
 from rich.panel import Panel
 from rich.table import Table
 from rich.text import Text
@@ -45,6 +46,7 @@ from app.terminal.ui_components import (
     render_help,
     render_query_result,
 )
+from src.llm_interface import GroqAnswerGenerator
 from src.lsh_minhash import MinHashRetriever
 from src.lsh_simhash import SimHashRetriever
 
@@ -90,6 +92,9 @@ class SearchResponse:
     latency: float
     method: str
     answer: str
+    citations: list[int] | None = None
+    llm_latency: float = 0.0
+    llm_validation: dict[str, Any] | None = None
 
 
 class RetrievalEngine:
@@ -278,6 +283,8 @@ class TerminalQAApp:
         self.state = SessionState(history_file=history_file or self.project_root / HISTORY_FILE)
         self.state.load_history()
         self.engine = RetrievalEngine(project_root=self.project_root, chunks_path=self.chunks_path)
+        self.llm: GroqAnswerGenerator | None = None
+        self.llm_enabled = False
         self.running = True
         self.multiline_mode = False
 
@@ -392,6 +399,41 @@ class TerminalQAApp:
 
         self.console.print(
             Panel(
+                Text("Initializing LLM...", style=COLOR_SCHEME["accent"]),
+                border_style=COLOR_SCHEME["border"],
+                box=ROUNDED,
+            )
+        )
+        try:
+            self.llm = GroqAnswerGenerator()
+            self.llm_enabled = True
+            self.console.print(
+                Panel(
+                    Text("LLM ready (Groq: llama-3.3-70b)", style=COLOR_SCHEME["success"]),
+                    border_style=COLOR_SCHEME["border"],
+                    box=ROUNDED,
+                )
+            )
+        except Exception as exc:
+            self.llm = None
+            self.llm_enabled = False
+            self.console.print(
+                Panel(
+                    Text(f"LLM initialization failed: {exc}", style="red"),
+                    border_style="red",
+                    box=ROUNDED,
+                )
+            )
+            self.console.print(
+                Panel(
+                    Text("Running in retrieval-only mode", style="yellow"),
+                    border_style="yellow",
+                    box=ROUNDED,
+                )
+            )
+
+        self.console.print(
+            Panel(
                 Text("System ready. Type /help for commands.", style=COLOR_SCHEME["system"]),
                 border_style=COLOR_SCHEME["border"],
                 box=ROUNDED,
@@ -452,44 +494,74 @@ class TerminalQAApp:
         with self.console.status("[dim]Searching handbook index...[/dim]", spinner="dots"):
             response = self.engine.search(self.state.current_method, query, self.top_k)
 
+        if self.llm_enabled and self.llm is not None and response.chunks:
+            answer_text = ""
+            citations: list[int] = []
+            validation: dict[str, Any] | None = None
+            completed = False
+            llm_start = time.perf_counter()
+            with Live(
+                Panel(
+                    Markdown(""),
+                    title="[bold green]Generating[/bold green]",
+                    border_style=COLOR_SCHEME["border"],
+                    box=ROUNDED,
+                ),
+                console=self.console,
+                refresh_per_second=20,
+            ) as live:
+                for token in self.llm.generate_answer_stream(query, response.chunks):
+                    if isinstance(token, dict) and token.get("complete"):
+                        citations = token.get("citations", [])
+                        validation = token.get("validation")
+                        answer_text = token.get("full_answer", answer_text)
+                        completed = True
+                        break
+                    answer_text += str(token)
+                    live.update(
+                        Panel(
+                            Markdown(answer_text or " "),
+                            title="[bold green]Generating[/bold green]",
+                            border_style=COLOR_SCHEME["border"],
+                            box=ROUNDED,
+                        )
+                    )
+            response.answer = (
+                answer_text
+                if completed
+                else f"{self.engine._build_placeholder_answer(query, response.chunks)}\n\n{answer_text.strip()}"
+            )
+            response.citations = citations
+            response.llm_validation = validation
+            response.llm_latency = time.perf_counter() - llm_start
+
         self.state.add_query(query, response.latency, len(response.chunks))
         self.state.last_results = response.chunks
         self.state.last_query = query
         self.state.save_history()
 
-        self.stream_answer(response.answer)
         self.console.print(
             render_query_result(
                 query=query,
                 chunks=response.chunks,
                 metrics={
                     "latency": response.latency,
+                    "llm_latency": response.llm_latency,
                     "method": response.method,
                     "answer": response.answer,
+                    "citations": response.citations or [],
                 },
             )
         )
-        return response
-
-    def stream_answer(self, answer: str) -> None:
-        """Stream text into a live panel for a smoother terminal feel."""
-        rendered = Text(style=COLOR_SCHEME["user_input"])
-        with Live(
-            Panel(rendered, title="[bold green]Thinking[/bold green]", border_style=COLOR_SCHEME["border"]),
-            console=self.console,
-            refresh_per_second=30,
-        ) as live:
-            for char in answer:
-                rendered.append(char)
-                live.update(
-                    Panel(
-                        rendered,
-                        title="[bold green]Thinking[/bold green]",
-                        border_style=COLOR_SCHEME["border"],
-                        box=ROUNDED,
-                    )
+        if response.llm_validation and response.llm_validation.get("warning"):
+            self.console.print(
+                Panel(
+                    str(response.llm_validation["warning"]),
+                    border_style="red",
+                    box=ROUNDED,
                 )
-                time.sleep(0.002)
+            )
+        return response
 
     def handle_command(self, raw_command: str) -> bool:
         name, *args = raw_command.split()
@@ -716,11 +788,27 @@ class TerminalQAApp:
         comparison_rows: list[tuple[str, SearchResponse]] = []
         with self.console.status("[dim]Comparing all retrieval methods...[/dim]", spinner="dots"):
             for method in SUPPORTED_METHODS:
-                comparison_rows.append((method, self.engine.search(method, self.state.last_query, self.top_k)))
+                response = self.engine.search(method, self.state.last_query, self.top_k)
+                if self.llm_enabled and self.llm is not None and response.chunks:
+                    llm_start = time.perf_counter()
+                    answer_text = ""
+                    for token in self.llm.generate_answer_stream(self.state.last_query, response.chunks):
+                        if isinstance(token, dict) and token.get("complete"):
+                            answer_text = token.get("full_answer", answer_text)
+                            break
+                        answer_text += str(token)
+                    response.answer = answer_text
+                    response.llm_latency = time.perf_counter() - llm_start
+                comparison_rows.append((method, response))
 
         table = Table(box=ROUNDED, title=f"Comparison: {self.state.last_query}")
         table.add_column("Method", style=COLOR_SCHEME["header"])
-        table.add_column("Latency", style=COLOR_SCHEME["score"])
+        table.add_column("Retrieval", style=COLOR_SCHEME["score"])
+        if self.llm_enabled:
+            table.add_column("LLM", style="magenta")
+            table.add_column("Total", style=COLOR_SCHEME["success"])
+        else:
+            table.add_column("Total", style=COLOR_SCHEME["success"])
         table.add_column("Results", style=COLOR_SCHEME["success"])
         table.add_column("Top Page", style=COLOR_SCHEME["page"])
         table.add_column("Top Score", style=COLOR_SCHEME["accent"])
@@ -728,13 +816,25 @@ class TerminalQAApp:
         for method, response in comparison_rows:
             top_page = response.chunks[0]["page"] if response.chunks else "n/a"
             top_score = f"{float(response.chunks[0]['score']):.4f}" if response.chunks else "n/a"
-            table.add_row(
-                method,
-                f"{response.latency * 1000:.1f} ms",
-                str(len(response.chunks)),
-                str(top_page),
-                top_score,
-            )
+            if self.llm_enabled:
+                table.add_row(
+                    method,
+                    f"{response.latency * 1000:.1f} ms",
+                    f"{response.llm_latency * 1000:.0f} ms",
+                    f"{(response.latency + response.llm_latency) * 1000:.0f} ms",
+                    str(len(response.chunks)),
+                    str(top_page),
+                    top_score,
+                )
+            else:
+                table.add_row(
+                    method,
+                    f"{response.latency * 1000:.1f} ms",
+                    f"{response.latency * 1000:.0f} ms",
+                    str(len(response.chunks)),
+                    str(top_page),
+                    top_score,
+                )
 
         self.console.print(table)
 
