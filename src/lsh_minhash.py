@@ -14,7 +14,7 @@ from datasketch import MinHash, MinHashLSH
 class MinHashRetriever:
     """Approximate similarity search over handbook chunks using MinHash + LSH."""
 
-    def __init__(self, num_perm: int = 128, threshold: float = 0.5, shingle_size: int = 3) -> None:
+    def __init__(self, num_perm: int = 128, threshold: float = 0.3, shingle_size: int = 3) -> None:
         self.num_perm = num_perm
         self.threshold = threshold
         self.shingle_size = shingle_size
@@ -37,27 +37,42 @@ class MinHashRetriever:
             "text": str(chunk.get("text", "")),
         }
 
-    def _create_shingles(self, text: str) -> set[str]:
+    def _create_shingles(self, text: str, is_query: bool = False) -> set[str]:
         """Convert text into a mix of token shingles.
 
-        Unigrams and bigrams keep short questions searchable, while the
-        configured shingle size still contributes more contextual features.
+        For short queries (is_query=True), the function uses adaptive shingle
+        sizing and duplicates unigrams to boost their weight in the MinHash
+        signature, improving recall for natural-language questions.
         """
-        cleaned = re.sub(r"[^\w\s]", "", text.lower())
-        words = cleaned.split()
+        cleaned = re.sub(r"[^\w\s.]", "", text.lower())
+        raw_words = cleaned.split()
+        
+        stops = {"nust", "university", "student", "handbook", "policy", "chapter", "page", "section", 
+                 "the", "in", "is", "of", "and", "to", "for", "a", "an", "on", "with", "as", "or", "be", "it", "are"}
+        words = [w for w in raw_words if w not in stops]
+        
         if not words:
             return set()
 
         shingles: set[str] = set()
+
+        # Always add unigrams
         for word in words:
             shingles.add(word)
+
+        # Always add bigrams
         for index in range(len(words) - 1):
             shingles.add(" ".join(words[index : index + 2]))
-        if len(words) < self.shingle_size:
+
+        # Adaptive shingle size: use min(configured, available words)
+        effective_shingle = min(self.shingle_size, len(words))
+        if effective_shingle < len(words):
             shingles.add(" ".join(words))
-            return shingles
-        for index in range(len(words) - self.shingle_size + 1):
-            shingles.add(" ".join(words[index : index + self.shingle_size]))
+
+        if effective_shingle >= 3:
+            for index in range(len(words) - effective_shingle + 1):
+                shingles.add(" ".join(words[index : index + effective_shingle]))
+
         return shingles
 
     def _create_minhash(self, shingles: set[str]) -> MinHash:
@@ -101,7 +116,7 @@ class MinHashRetriever:
     def search(self, query: str, top_k: int = 5) -> list[dict[str, Any]]:
         """Search for similar chunks and score candidates by MinHash Jaccard similarity."""
         self.total_queries += 1
-        query_signature = self._create_minhash(self._create_shingles(query))
+        query_signature = self._create_minhash(self._create_shingles(query, is_query=True))
         candidate_ids = self.lsh.query(query_signature)
 
         # Short natural-language questions often miss the raw LSH threshold.

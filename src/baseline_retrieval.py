@@ -23,7 +23,17 @@ class BaselineRetrievalAgent:
             if max_authority > 0:
                 self.authority = self.authority / max_authority
 
-        self.vectorizer = TfidfVectorizer(stop_words="english")
+        from sklearn.feature_extraction.text import ENGLISH_STOP_WORDS
+        custom_stops = {"nust", "university", "student", "handbook", "policy", "chapter", "page", "section"}
+        all_stops = list(ENGLISH_STOP_WORDS.union(custom_stops))
+
+        self.vectorizer = TfidfVectorizer(
+            stop_words=all_stops,
+            ngram_range=(1, 2),      # capture phrases like "credit hours", "minimum gpa"
+            sublinear_tf=True,       # dampen dominant terms in long chunks
+            max_df=0.85,             # ignore terms in >85% of chunks (too generic)
+            min_df=2,                # ignore terms appearing only once
+        )
         self.tfidf_matrix = self.vectorizer.fit_transform(self.corpus)
 
     def retrieve(self, query, top_k=3):
@@ -32,7 +42,8 @@ class BaselineRetrievalAgent:
 
         query_vec = self.vectorizer.transform([query.lower()])
         relevance_scores = cosine_similarity(query_vec, self.tfidf_matrix).flatten()
-        final_scores = relevance_scores * (1.0 + self.authority)
+        # Use strictly reduced authority weight so specific rules aren't drowned by "important" pages
+        final_scores = relevance_scores * (1.0 + 0.05 * self.authority)
 
         top_indices = np.argsort(final_scores)[-top_k:][::-1]
 

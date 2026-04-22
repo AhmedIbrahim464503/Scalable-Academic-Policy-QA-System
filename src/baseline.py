@@ -31,7 +31,17 @@ class TFIDFBaseline:
     ) -> None:
         self.chunks_path = Path(chunks_path) if chunks_path else None
         self.chunks = chunks or []
-        self.vectorizer = TfidfVectorizer(stop_words="english")
+        from sklearn.feature_extraction.text import ENGLISH_STOP_WORDS
+        custom_stops = {"nust", "university", "student", "handbook", "policy", "chapter", "page", "section"}
+        all_stops = list(ENGLISH_STOP_WORDS.union(custom_stops))
+
+        self.vectorizer = TfidfVectorizer(
+            stop_words=all_stops,
+            ngram_range=(1, 2),
+            sublinear_tf=True,
+            max_df=0.85,
+            min_df=2,
+        )
         self.chunk_matrix = None
         self.agent = None
 
