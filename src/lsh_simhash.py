@@ -1,10 +1,17 @@
-"""SimHash retrieval using the simhash library."""
+"""SimHash retrieval with bit-band partitioning for sub-linear search.
+
+Instead of scanning every fingerprint (O(N)), the index partitions each
+fingerprint into ``num_bands`` bands and hashes each band into a bucket
+table.  At query time we only compute full Hamming distance for the union
+of candidates across all band tables, giving near-O(1) approximate lookup.
+"""
 
 from __future__ import annotations
 
 import json
 import re
 import time
+from collections import defaultdict
 from pathlib import Path
 from typing import Any
 
@@ -12,14 +19,18 @@ from simhash import Simhash
 
 
 class SimHashRetriever:
-    """Approximate similarity search using SimHash fingerprints."""
+    """Approximate similarity search using SimHash fingerprints with band indexing."""
 
-    def __init__(self, fingerprint_size: int = 64, hamming_threshold: int = 20) -> None:
+    def __init__(self, fingerprint_size: int = 64, hamming_threshold: int = 20, num_bands: int = 8) -> None:
         self.fingerprint_size = fingerprint_size
         self.hamming_threshold = hamming_threshold
+        self.num_bands = num_bands
+        self.band_size = fingerprint_size // num_bands
 
         self.chunks: dict[str, dict[str, Any]] = {}
         self.fingerprints: dict[str, Simhash] = {}
+        # Band tables: list of dicts mapping band_hash -> set of chunk_ids
+        self.band_tables: list[dict[int, set[str]]] = [defaultdict(set) for _ in range(num_bands)]
 
         self.index_time = 0.0
         self.total_queries = 0
@@ -35,28 +46,48 @@ class SimHashRetriever:
         }
 
     def _preprocess_text(self, text: str) -> str:
-        cleaned = re.sub(r"[^\w\s]", "", text.lower())
-        return re.sub(r"\s+", " ", cleaned).strip()
+        cleaned = re.sub(r"[^\w\s.]", "", text.lower())
+        raw_words = cleaned.split()
+        stops = {"nust", "university", "student", "handbook", "policy", "chapter", "page", "section", 
+                 "the", "in", "is", "of", "and", "to", "for", "a", "an", "on", "with", "as", "or", "be", "it", "are"}
+        words = [w for w in raw_words if w not in stops]
+        return " ".join(words)
 
     def _token_features(self, text: str) -> list[str]:
-        """Use token bigrams when possible so the fingerprint carries more structure."""
+        """Use unigrams and bigrams so both short queries and long chunks match well."""
         words = self._preprocess_text(text).split()
-        if len(words) < 2:
-            return words or [""]
-        return [f"{words[index]} {words[index + 1]}" for index in range(len(words) - 1)]
+        if not words:
+            return [""]
+
+        features: list[str] = list(words)  # unigrams
+        # bigrams
+        for index in range(len(words) - 1):
+            features.append(f"{words[index]} {words[index + 1]}")
+        return features
 
     def _create_simhash(self, text: str) -> Simhash:
         return Simhash(self._token_features(text), f=self.fingerprint_size)
 
+    def _get_bands(self, fingerprint: Simhash) -> list[int]:
+        """Partition the fingerprint value into num_bands sub-hashes."""
+        value = fingerprint.value
+        bands: list[int] = []
+        mask = (1 << self.band_size) - 1
+        for _ in range(self.num_bands):
+            bands.append(value & mask)
+            value >>= self.band_size
+        return bands
+
     def create_index(self, chunks: list[dict[str, Any]]) -> None:
-        """Build the SimHash fingerprint store."""
-        print("\nBuilding SimHash index...")
+        """Build the SimHash fingerprint store with band-indexed lookup tables."""
+        print("\nBuilding SimHash index with bit-band partitioning...")
         print(f"  Chunks: {len(chunks)}")
-        print(f"  Parameters: bits={self.fingerprint_size}, hamming_threshold={self.hamming_threshold}")
+        print(f"  Parameters: bits={self.fingerprint_size}, hamming_threshold={self.hamming_threshold}, bands={self.num_bands}")
 
         start = time.time()
         self.chunks.clear()
         self.fingerprints.clear()
+        self.band_tables = [defaultdict(set) for _ in range(self.num_bands)]
 
         for index, raw_chunk in enumerate(chunks, start=1):
             if index % 100 == 0 or index == len(chunks):
@@ -65,28 +96,42 @@ class SimHashRetriever:
             chunk = self._normalize_chunk(raw_chunk, fallback_index=index - 1)
             chunk_id = chunk["id"]
             self.chunks[chunk_id] = chunk
-            self.fingerprints[chunk_id] = self._create_simhash(chunk["text"])
+
+            fp = self._create_simhash(chunk["text"])
+            self.fingerprints[chunk_id] = fp
+
+            # Insert into band tables for sub-linear lookup
+            bands = self._get_bands(fp)
+            for band_idx, band_hash in enumerate(bands):
+                self.band_tables[band_idx][band_hash].add(chunk_id)
 
         self.index_time = time.time() - start
         print(f"\nIndex built in {self.index_time:.2f}s")
 
     def search(self, query: str, top_k: int = 5) -> list[dict[str, Any]]:
-        """Search for similar chunks by Hamming distance and return top results."""
+        """Search using band-indexed approximate lookup, then rank by Hamming distance."""
         self.total_queries += 1
         query_hash = self._create_simhash(query)
 
+        # Phase 1: Collect candidates from band tables (sub-linear)
+        candidate_ids: set[str] = set()
+        query_bands = self._get_bands(query_hash)
+        for band_idx, band_hash in enumerate(query_bands):
+            candidate_ids.update(self.band_tables[band_idx].get(band_hash, set()))
+
+        # Phase 2: Score candidates by full Hamming distance
         results: list[dict[str, Any]] = []
-        for chunk_id, chunk_hash in self.fingerprints.items():
-            distance = query_hash.distance(chunk_hash)
+        for chunk_id in candidate_ids:
+            distance = query_hash.distance(self.fingerprints[chunk_id])
             if distance > self.hamming_threshold:
                 continue
-
             similarity = 1.0 - (distance / self.fingerprint_size)
             chunk = self.chunks[chunk_id].copy()
             chunk["score"] = float(similarity)
             chunk["hamming_distance"] = int(distance)
             results.append(chunk)
 
+        # Fallback: if band lookup returned nothing useful, scan all (graceful degradation)
         if not results:
             for chunk_id, chunk_hash in self.fingerprints.items():
                 distance = query_hash.distance(chunk_hash)
@@ -101,10 +146,12 @@ class SimHashRetriever:
 
     def get_stats(self) -> dict[str, Any]:
         return {
-            "method": "SimHash",
+            "method": "SimHash (bit-band indexed)",
             "num_chunks": len(self.chunks),
             "fingerprint_size": self.fingerprint_size,
             "hamming_threshold": self.hamming_threshold,
+            "num_bands": self.num_bands,
+            "band_size": self.band_size,
             "index_time_s": self.index_time,
             "total_queries": self.total_queries,
         }
@@ -112,7 +159,7 @@ class SimHashRetriever:
 
 if __name__ == "__main__":
     print("=" * 60)
-    print("TESTING SIMHASH")
+    print("TESTING SIMHASH (BIT-BAND INDEXED)")
     print("=" * 60)
 
     chunks_path = Path("data/processed/chunks.json")
@@ -120,7 +167,7 @@ if __name__ == "__main__":
         chunks = json.load(file)
     print(f"\nLoaded {len(chunks)} chunks")
 
-    retriever = SimHashRetriever(fingerprint_size=64, hamming_threshold=20)
+    retriever = SimHashRetriever(fingerprint_size=64, hamming_threshold=20, num_bands=8)
     retriever.create_index(chunks)
 
     query = "What is the minimum GPA requirement?"

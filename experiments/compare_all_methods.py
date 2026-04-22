@@ -18,7 +18,7 @@ from src.lsh_minhash import MinHashRetriever
 from src.lsh_simhash import SimHashRetriever
 
 MINHASH_DEFAULTS = {"num_perm": 64, "threshold": 0.3, "shingle_size": 3}
-SIMHASH_DEFAULTS = {"fingerprint_size": 64, "hamming_threshold": 24}
+SIMHASH_DEFAULTS = {"fingerprint_size": 64, "hamming_threshold": 24, "num_bands": 8}
 
 
 def result_ids(results: list[dict]) -> list[str]:
