@@ -2,76 +2,91 @@
   {
     "id": 1,
     "query": "What is the minimum GPA requirement?",
-    "category": "gpa"
+    "category": "gpa",
+    "expected_pages": [19, 20, 24, 40]
   },
   {
     "id": 2,
     "query": "What happens if a student fails a course?",
-    "category": "failure"
+    "category": "failure",
+    "expected_pages": [19, 20, 21, 22, 24, 25]
   },
   {
     "id": 3,
     "query": "What is the attendance policy?",
-    "category": "attendance"
+    "category": "attendance",
+    "expected_pages": [14, 15, 16]
   },
   {
     "id": 4,
     "query": "How many times can a course be repeated?",
-    "category": "repetition"
+    "category": "repetition",
+    "expected_pages": [20, 21, 25, 41]
   },
   {
     "id": 5,
     "query": "What are the degree requirements?",
-    "category": "graduation"
+    "category": "graduation",
+    "expected_pages": [10, 11, 19, 24, 40, 67]
   },
   {
     "id": 6,
     "query": "What is the policy on academic probation?",
-    "category": "probation"
+    "category": "probation",
+    "expected_pages": [22, 23, 26, 43]
   },
   {
     "id": 7,
     "query": "How is GPA calculated?",
-    "category": "calculation"
+    "category": "calculation",
+    "expected_pages": [12, 13, 14]
   },
   {
     "id": 8,
     "query": "What is the process for grade appeals?",
-    "category": "appeals"
+    "category": "appeals",
+    "expected_pages": [49, 50, 51]
   },
   {
     "id": 9,
     "query": "What is the withdrawal policy?",
-    "category": "withdrawal"
+    "category": "withdrawal",
+    "expected_pages": [21, 22, 49, 50]
   },
   {
     "id": 10,
     "query": "What are the requirements for honors?",
-    "category": "honors"
+    "category": "honors",
+    "expected_pages": [67, 68, 69]
   },
   {
     "id": 11,
     "query": "What is the policy on academic integrity?",
-    "category": "integrity"
+    "category": "integrity",
+    "expected_pages": [77, 78, 79, 80]
   },
   {
     "id": 12,
     "query": "How many credits are required to graduate?",
-    "category": "credits"
+    "category": "credits",
+    "expected_pages": [10, 11, 19, 24, 40]
   },
   {
     "id": 13,
     "query": "What is the maximum course load per semester?",
-    "category": "load"
+    "category": "load",
+    "expected_pages": [10, 11, 21]
   },
   {
     "id": 14,
     "query": "What happens if attendance falls below requirement?",
-    "category": "attendance_low"
+    "category": "attendance_low",
+    "expected_pages": [14, 15, 16]
   },
   {
     "id": 15,
     "query": "What is the exam retake policy?",
-    "category": "retake"
+    "category": "retake",
+    "expected_pages": [20, 21, 49, 50, 51]
   }
 ]

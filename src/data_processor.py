@@ -43,9 +43,30 @@ STOPWORDS = {
 
 
 def clean_text(text):
-    """Normalize text and remove noise while preserving alphanumeric tokens."""
+    """Normalize text while preserving decimals, percentages, and section numbers.
+
+    Previous version stripped ALL non-alphanumeric chars, turning '2.0 GPA' into
+    '2 0 gpa' and '75%' into '75'.  This version keeps structure that matters for
+    academic policy retrieval.
+    """
     text = text.lower()
+
+    # Protect decimal numbers (e.g. 2.0, 3.5) and section refs (e.g. 1.2.3)
+    text = re.sub(r"(\d)\.(\d)", r"\1 POINT \2", text)
+
+    # Protect percentages
+    text = re.sub(r"(\d)\s*%", r"\1 percent", text)
+
+    # Replace hyphens between words with spaces (e.g. "full-time" → "full time")
+    text = re.sub(r"(\w)-(\w)", r"\1 \2", text)
+
+    # Remove remaining noise characters but keep alphanumeric and our markers
     text = re.sub(r"[^a-z0-9\s]", " ", text)
+
+    # Restore decimal points from our markers
+    text = re.sub(r"(\d)\s*POINT\s*(\d)", r"\1.\2", text, flags=re.IGNORECASE)
+
+    # Collapse whitespace
     text = re.sub(r"\s+", " ", text)
     return text.strip()
 

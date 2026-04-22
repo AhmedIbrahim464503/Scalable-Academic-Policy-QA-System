@@ -20,8 +20,8 @@ THEMES_OUTPUT = str(PROCESSED_DATA_DIR / "top_themes.json")
 MASSIVE_DATA_OUTPUT = str(PROCESSED_DATA_DIR / "massive_chunks.json")
 
 # Rubric-compliant chunking settings
-CHUNK_SIZE = 300  # Words per chunk
-OVERLAP = 50      # Context preservation overlap
+CHUNK_SIZE = 200  # Words per chunk (project spec: 200-500)
+OVERLAP = 75      # Context preservation overlap
 SCALABILITY_FACTOR = 50  # Multiply data 50x for stress test
 
 # Frequent itemset + graph scoring controls

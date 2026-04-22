@@ -4,239 +4,239 @@
       "nust",
       "student"
     ],
-    "support": 0.704545,
-    "frequency": 248
-  },
-  {
-    "items": [
-      "handbook",
-      "nust"
-    ],
-    "support": 0.642045,
-    "frequency": 226
-  },
-  {
-    "items": [
-      "handbook",
-      "student"
-    ],
-    "support": 0.636364,
-    "frequency": 224
+    "support": 0.548845,
+    "frequency": 309
   },
   {
     "items": [
       "student",
       "students"
     ],
-    "support": 0.548295,
-    "frequency": 193
+    "support": 0.48135,
+    "frequency": 271
   },
   {
     "items": [
       "nust",
       "students"
     ],
-    "support": 0.511364,
-    "frequency": 180
+    "support": 0.422735,
+    "frequency": 238
   },
   {
     "items": [
       "any",
       "student"
     ],
-    "support": 0.497159,
-    "frequency": 175
-  },
-  {
-    "items": [
-      "any",
-      "nust"
-    ],
-    "support": 0.434659,
-    "frequency": 153
+    "support": 0.412078,
+    "frequency": 232
   },
   {
     "items": [
       "handbook",
-      "students"
+      "nust"
     ],
-    "support": 0.426136,
-    "frequency": 150
+    "support": 0.40675,
+    "frequency": 229
   },
   {
     "items": [
-      "any",
-      "students"
+      "handbook",
+      "student"
     ],
-    "support": 0.394886,
-    "frequency": 139
-  },
-  {
-    "items": [
-      "any",
-      "handbook"
-    ],
-    "support": 0.383523,
-    "frequency": 135
+    "support": 0.401421,
+    "frequency": 226
   },
   {
     "items": [
       "semester",
       "student"
     ],
-    "support": 0.363636,
-    "frequency": 128
+    "support": 0.333925,
+    "frequency": 188
   },
   {
     "items": [
-      "nust",
-      "university"
+      "any",
+      "students"
     ],
-    "support": 0.349432,
-    "frequency": 123
+    "support": 0.325044,
+    "frequency": 183
   },
   {
     "items": [
-      "handbook",
-      "undergraduate"
-    ],
-    "support": 0.335227,
-    "frequency": 118
-  },
-  {
-    "items": [
-      "nust",
-      "undergraduate"
-    ],
-    "support": 0.335227,
-    "frequency": 118
-  },
-  {
-    "items": [
-      "student",
-      "undergraduate"
-    ],
-    "support": 0.335227,
-    "frequency": 118
-  },
-  {
-    "items": [
-      "student",
-      "university"
-    ],
-    "support": 0.332386,
-    "frequency": 117
-  },
-  {
-    "items": [
-      "all",
-      "student"
-    ],
-    "support": 0.329545,
-    "frequency": 116
-  },
-  {
-    "items": [
-      "academic",
-      "student"
-    ],
-    "support": 0.318182,
-    "frequency": 112
-  },
-  {
-    "items": [
-      "postgraduate",
-      "student"
-    ],
-    "support": 0.318182,
-    "frequency": 112
-  },
-  {
-    "items": [
-      "following",
-      "student"
-    ],
-    "support": 0.318182,
-    "frequency": 112
-  },
-  {
-    "items": [
-      "all",
+      "any",
       "nust"
     ],
-    "support": 0.315341,
-    "frequency": 111
-  },
-  {
-    "items": [
-      "handbook",
-      "postgraduate"
-    ],
-    "support": 0.3125,
-    "frequency": 110
+    "support": 0.30373,
+    "frequency": 171
   },
   {
     "items": [
       "nust",
-      "postgraduate"
+      "university"
     ],
-    "support": 0.3125,
-    "frequency": 110
+    "support": 0.277087,
+    "frequency": 156
+  },
+  {
+    "items": [
+      "student",
+      "university"
+    ],
+    "support": 0.273535,
+    "frequency": 154
+  },
+  {
+    "items": [
+      "all",
+      "student"
+    ],
+    "support": 0.264654,
+    "frequency": 149
   },
   {
     "items": [
       "may",
       "student"
     ],
-    "support": 0.303977,
-    "frequency": 107
-  },
-  {
-    "items": [
-      "handbook",
-      "university"
-    ],
-    "support": 0.301136,
-    "frequency": 106
-  },
-  {
-    "items": [
-      "nust",
-      "semester"
-    ],
-    "support": 0.295455,
-    "frequency": 104
-  },
-  {
-    "items": [
-      "students",
-      "university"
-    ],
-    "support": 0.292614,
-    "frequency": 103
+    "support": 0.259325,
+    "frequency": 146
   },
   {
     "items": [
       "following",
-      "nust"
+      "student"
     ],
-    "support": 0.289773,
-    "frequency": 102
+    "support": 0.25222,
+    "frequency": 142
+  },
+  {
+    "items": [
+      "handbook",
+      "students"
+    ],
+    "support": 0.248668,
+    "frequency": 140
+  },
+  {
+    "items": [
+      "academic",
+      "student"
+    ],
+    "support": 0.243339,
+    "frequency": 137
+  },
+  {
+    "items": [
+      "course",
+      "student"
+    ],
+    "support": 0.241563,
+    "frequency": 136
   },
   {
     "items": [
       "shall",
       "student"
     ],
-    "support": 0.289773,
-    "frequency": 102
+    "support": 0.238011,
+    "frequency": 134
   },
   {
     "items": [
-      "academic",
+      "students",
+      "university"
+    ],
+    "support": 0.236234,
+    "frequency": 133
+  },
+  {
+    "items": [
+      "all",
+      "students"
+    ],
+    "support": 0.232682,
+    "frequency": 131
+  },
+  {
+    "items": [
+      "student",
+      "time"
+    ],
+    "support": 0.227353,
+    "frequency": 128
+  },
+  {
+    "items": [
+      "all",
       "nust"
     ],
-    "support": 0.286932,
-    "frequency": 101
+    "support": 0.220249,
+    "frequency": 124
+  },
+  {
+    "items": [
+      "after",
+      "student"
+    ],
+    "support": 0.220249,
+    "frequency": 124
+  },
+  {
+    "items": [
+      "semester",
+      "students"
+    ],
+    "support": 0.220249,
+    "frequency": 124
+  },
+  {
+    "items": [
+      "nust",
+      "semester"
+    ],
+    "support": 0.218472,
+    "frequency": 123
+  },
+  {
+    "items": [
+      "grade",
+      "student"
+    ],
+    "support": 0.218472,
+    "frequency": 123
+  },
+  {
+    "items": [
+      "student",
+      "undergraduate"
+    ],
+    "support": 0.21492,
+    "frequency": 121
+  },
+  {
+    "items": [
+      "nust",
+      "undergraduate"
+    ],
+    "support": 0.213144,
+    "frequency": 120
+  },
+  {
+    "items": [
+      "institution",
+      "student"
+    ],
+    "support": 0.209591,
+    "frequency": 118
+  },
+  {
+    "items": [
+      "postgraduate",
+      "student"
+    ],
+    "support": 0.206039,
+    "frequency": 116
   }
 ]
