@@ -1,29 +1,26 @@
+# --- Core Data Processing ---
+pymupdf
 pdfplumber
-PyMuPDF
 scikit-learn
 numpy
 pandas
+
+# --- Big Data Algorithms ---
 datasketch
 simhash
-plotly
+
+# --- UI & Analysis ---
 streamlit
-groq
-pytest
-jupyter
 matplotlib
 seaborn
-# --- Phase 1: Data & Baseline ---
-pymupdf==1.23.0
-scikit-learn==1.3.0
-numpy==1.24.0
-pandas==2.0.0
+plotly
+jupyter
 
-# --- Phase 2: Big Data Algorithms ---
-# (Using standard libs for math to show conceptual strength)
-datasketch==1.5.9  
-
-# --- Phase 3: UI & LLM ---
-streamlit==1.28.0
-openai==1.3.0
-google-generativeai==0.3.0
-matplotlib==3.7.0
+# --- LLM & Development ---
+groq
+openai
+google-generativeai
+pytest
+python-dotenv
+rich
+prompt-toolkit
