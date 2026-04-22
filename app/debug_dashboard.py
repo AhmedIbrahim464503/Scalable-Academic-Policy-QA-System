@@ -39,12 +39,14 @@ def chunk_score(chunk: dict[str, Any]) -> float:
 
 @st.cache_data
 def load_chunks() -> list[dict[str, Any]]:
-    return json.loads(CHUNKS_PATH.read_text(encoding="utf-8"))
+    with open(CHUNKS_PATH, "r", encoding="utf-8") as f:
+        return json.load(f)
 
 
 @st.cache_data
 def load_test_queries() -> list[dict[str, Any]]:
-    return json.loads(TEST_QUERIES_PATH.read_text(encoding="utf-8"))
+    with open(TEST_QUERIES_PATH, "r", encoding="utf-8") as f:
+        return json.load(f)
 
 
 @st.cache_resource
@@ -156,7 +158,7 @@ with tab1:
             title="Chunk Overlap Percentage",
             labels={"Overlap": "Overlap %"},
         )
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, use_container_width=False)
 
 with tab2:
     st.subheader("Performance Comparison")
@@ -183,9 +185,9 @@ with tab2:
         df = pd.DataFrame(benchmark_rows)
         fig_latency = px.box(df, x="Method", y="Latency (ms)", title="Latency Distribution by Method", color="Method")
         fig_score = px.box(df, x="Method", y="Top Score", title="Top Score Distribution by Method", color="Method")
-        st.plotly_chart(fig_latency, use_container_width=True)
-        st.plotly_chart(fig_score, use_container_width=True)
-        st.dataframe(df, use_container_width=True)
+        st.plotly_chart(fig_latency, use_container_width=False)
+        st.plotly_chart(fig_score, use_container_width=False)
+        st.dataframe(df, use_container_width=False)
 
 with tab3:
     st.subheader("Live Parameter Tuning")
@@ -234,7 +236,7 @@ with tab4:
                 rows.append(row)
 
             df = pd.DataFrame(rows)
-            st.dataframe(df, use_container_width=True)
+            st.dataframe(df, use_container_width=False)
             st.download_button(
                 "Download Results CSV",
                 df.to_csv(index=False),
