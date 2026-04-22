@@ -49,11 +49,12 @@ from app.terminal.ui_components import (
 from src.llm_interface import GroqAnswerGenerator
 from src.lsh_minhash import MinHashRetriever
 from src.lsh_simhash import SimHashRetriever
+from src.query_enhancer import QueryEnhancer
 
 APP_VERSION = "0.1.0"
 SUPPORTED_METHODS = ("baseline", "minhash", "simhash")
 MINHASH_DEFAULTS = {"num_perm": 64, "threshold": 0.3, "shingle_size": 3}
-SIMHASH_DEFAULTS = {"fingerprint_size": 64, "hamming_threshold": 24}
+SIMHASH_DEFAULTS = {"fingerprint_size": 64, "hamming_threshold": 24, "num_bands": 8}
 
 DEBUG_HELP_TEXT = """[bold cyan]Debug Mode Commands[/bold cyan]
 
@@ -92,6 +93,7 @@ class SearchResponse:
     latency: float
     method: str
     answer: str
+    enhanced_query: str = ""
     citations: list[int] | None = None
     llm_latency: float = 0.0
     llm_validation: dict[str, Any] | None = None
@@ -106,6 +108,8 @@ class RetrievalEngine:
         self._cache: dict[str, Any] = {}
         self._chunks_cache: list[dict[str, Any]] | None = None
         self.chunk_count = 0
+        self.query_enhancer: QueryEnhancer | None = None
+        self.enhance_enabled = True
 
     def _load_chunks(self) -> list[dict[str, Any]]:
         if self._chunks_cache is not None:
@@ -202,13 +206,21 @@ class RetrievalEngine:
         return model
 
     def search(self, method: str, query: str, top_k: int = DEFAULT_TOP_K) -> SearchResponse:
+        # Optionally enhance the query before retrieval
+        enhanced_query = query
+        if self.enhance_enabled and self.query_enhancer and self.query_enhancer.enabled:
+            enhanced_query = self.query_enhancer.enhance(query)
+
         model = self.load_method(method)
         start = time.perf_counter()
-        raw_results = model.search(query, top_k=top_k)
+        raw_results = model.search(enhanced_query, top_k=top_k)
         latency = time.perf_counter() - start
         chunks = self._normalize_results(raw_results)
         answer = self._build_placeholder_answer(query, chunks)
-        return SearchResponse(chunks=chunks, latency=latency, method=method, answer=answer)
+        return SearchResponse(
+            chunks=chunks, latency=latency, method=method,
+            answer=answer, enhanced_query=enhanced_query if enhanced_query != query else "",
+        )
 
     def _normalize_results(self, raw_results: Any) -> list[dict[str, Any]]:
         if raw_results is None:
@@ -432,6 +444,20 @@ class TerminalQAApp:
                 )
             )
 
+        # Initialize query enhancer (uses the same Groq client)
+        try:
+            self.engine.query_enhancer = QueryEnhancer()
+            if self.engine.query_enhancer.enabled:
+                self.console.print(
+                    Panel(
+                        Text("Query enhancement ready", style=COLOR_SCHEME["success"]),
+                        border_style=COLOR_SCHEME["border"],
+                        box=ROUNDED,
+                    )
+                )
+        except Exception:
+            self.engine.query_enhancer = None
+
         self.console.print(
             Panel(
                 Text("System ready. Type /help for commands.", style=COLOR_SCHEME["system"]),
@@ -493,6 +519,22 @@ class TerminalQAApp:
     def process_query(self, query: str) -> SearchResponse:
         with self.console.status("[dim]Searching handbook index...[/dim]", spinner="dots"):
             response = self.engine.search(self.state.current_method, query, self.top_k)
+
+        # Show enhanced query if query expansion was used
+        if response.enhanced_query:
+            self.console.print(
+                Panel(
+                    Text.assemble(
+                        ("Original: ", COLOR_SCHEME["system"]),
+                        (query, COLOR_SCHEME["user_input"]),
+                        ("\nEnhanced: ", COLOR_SCHEME["system"]),
+                        (response.enhanced_query, COLOR_SCHEME["accent"]),
+                    ),
+                    title="[bold cyan]Query Enhancement[/bold cyan]",
+                    border_style="cyan",
+                    box=ROUNDED,
+                )
+            )
 
         if self.llm_enabled and self.llm is not None and response.chunks:
             answer_text = ""
@@ -620,6 +662,10 @@ class TerminalQAApp:
 
         if command == "/expand":
             self._expand_result(args)
+            return True
+
+        if command == "/enhance":
+            self._toggle_enhance(args)
             return True
 
         self.console.print(
@@ -913,6 +959,33 @@ class TerminalQAApp:
                 query_terms=self.state.last_query.split(),
             )
         )
+
+    def _toggle_enhance(self, args: list[str]) -> None:
+        if not args:
+            status = "ON" if self.engine.enhance_enabled else "OFF"
+            self.console.print(
+                Panel(
+                    f"Query enhancement is {status}. Use /enhance on or /enhance off.",
+                    border_style=COLOR_SCHEME["border"],
+                    box=ROUNDED,
+                )
+            )
+            return
+        flag = args[0].lower()
+        if flag in ("on", "true", "1"):
+            self.engine.enhance_enabled = True
+            self.console.print(
+                Panel("Query enhancement enabled.", border_style=COLOR_SCHEME["success"], box=ROUNDED)
+            )
+        elif flag in ("off", "false", "0"):
+            self.engine.enhance_enabled = False
+            self.console.print(
+                Panel("Query enhancement disabled.", border_style="yellow", box=ROUNDED)
+            )
+        else:
+            self.console.print(
+                Panel("Usage: /enhance on|off", border_style="red", box=ROUNDED)
+            )
 
     def _export_results(self) -> Path | None:
         if not self.state.last_results:
