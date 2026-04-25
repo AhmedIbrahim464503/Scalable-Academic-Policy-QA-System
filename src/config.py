@@ -18,6 +18,7 @@ PDF_PATH = PDF_PATHS["undergraduate"]
 DATA_OUTPUT = str(PROCESSED_DATA_DIR / "chunks.json")
 THEMES_OUTPUT = str(PROCESSED_DATA_DIR / "top_themes.json")
 MASSIVE_DATA_OUTPUT = str(PROCESSED_DATA_DIR / "massive_chunks.json")
+TEST_QUERIES_PATH = str(PROCESSED_DATA_DIR / "test_queries.json")
 
 # Rubric-compliant chunking settings
 CHUNK_SIZE = 200  # Words per chunk (project spec: 200-500)
