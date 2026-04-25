@@ -1,21 +1,13 @@
-"""LLM-powered query enhancement for improving retrieval accuracy.
+"""LLM-powered query enhancement using Multi-Query Retrieval.
 
-Before the raw user query hits the retriever, this module optionally asks
-the Groq LLM to expand it into richer search terms.  Example:
-
-    Input:  "max credit hours semester"
-    Output: "maximum number of credit hours allowed per semester course load limit"
-
-The expansion adds synonyms and related academic terms so the TF-IDF
-vectorizer and MinHash/SimHash shingles have more surface area to match
-against handbook chunks.
-
-This does NOT bypass retrieval — it only improves the *input* to retrieval.
+This module uses the Groq LLM to generate multiple alternative versions of a 
+user's question to improve the recall of the retrieval step.
 """
 
 from __future__ import annotations
 
 import os
+import json
 from typing import Any
 
 from dotenv import load_dotenv
@@ -24,28 +16,7 @@ load_dotenv()
 
 
 class QueryEnhancer:
-    """Expand user queries using a lightweight LLM call."""
-
-    SYSTEM_PROMPT = """You are a query expansion assistant for a university handbook search system.
-
-Your ONLY job: take the user's search query and append related synonyms to it.
-
-Rules:
-1. ALWAYS start your output with the exact keywords from the user's input.
-2. Output ONLY the expanded search terms, nothing else.
-3. Append synonyms and related academic terms at the end.
-4. Keep the original unique entities (like 'Exchange', 'Hostel', 'Warning') intact and do NOT dilute them.
-5. Do NOT answer the question.
-6. Keep output under 20 words to avoid noise dilution.
-
-Example:
-Input: "what is the minimum cgpa for exchange program"
-Output: "minimum cgpa exchange program eligibility requirement study abroad"
-
-Example:
-Input: "attendance policy"
-Output: "attendance policy requirement minimum percentage classes lectures"
-"""
+    """Generates alternative search queries to improve retrieval coverage."""
 
     def __init__(self, api_key: str | None = None, model: str = "llama-3.3-70b-versatile") -> None:
         self.api_key = api_key or os.getenv("GROQ_API_KEY")
@@ -53,6 +24,21 @@ Output: "attendance policy requirement minimum percentage classes lectures"
         self.model = model
         self.enabled = False
         self.enhancement_count = 0
+
+        self.system_prompt = """You are a search expert for a university policy database.
+Your job is to generate 2-3 alternative versions of a user's question to help find different parts of the handbook.
+
+RULES:
+1. Output ONLY a JSON list of strings. 
+2. Each string should be a complete, distinct search query.
+3. Focus on different aspects (e.g., if asking about 'attendance', one query should be about 'exam eligibility', another about 'shortage of attendance').
+4. Do NOT include the original query in your list.
+5. NO explanation, NO conversational text.
+
+Example:
+Input: "What is the minimum attendance?"
+Output: ["mandatory attendance percentage for exams", "shortage of attendance consequences", "attendance policy requirements"]
+"""
 
         if self.api_key:
             try:
@@ -62,41 +48,33 @@ Output: "attendance policy requirement minimum percentage classes lectures"
             except Exception:
                 pass
 
-    def enhance(self, query: str) -> str:
-        """Expand a query into richer search terms.
-
-        Returns the enhanced query on success, or the original query if
-        enhancement is disabled or the LLM call fails.
-        """
+    def generate_queries(self, query: str) -> list[str]:
+        """Generate a list of alternative queries (including the original)."""
+        queries = [query]
         if not self.enabled or not self.client:
-            return query
+            return queries
 
-        if not query.strip():
-            return query
-
+        self.enhancement_count += 1
         try:
             response = self.client.chat.completions.create(
                 model=self.model,
                 messages=[
-                    {"role": "system", "content": self.SYSTEM_PROMPT},
-                    {"role": "user", "content": query},
+                    {"role": "system", "content": self.system_prompt},
+                    {"role": "user", "content": f'Input: "{query}"'},
                 ],
-                temperature=0.0,
-                max_tokens=80,
-                stream=False,
+                temperature=0.2,
+                max_tokens=200,
+                response_format={"type": "json_object"} if "70b" in self.model else None
             )
-            enhanced = response.choices[0].message.content.strip()
-            if enhanced:
-                self.enhancement_count += 1
-                return enhanced
+            content = response.choices[0].message.content.strip()
+            
+            # Extract JSON list (handle potential LLM formatting variations)
+            if "[" in content and "]" in content:
+                json_str = content[content.find("["):content.rfind("]")+1]
+                alternatives = json.loads(json_str)
+                if isinstance(alternatives, list):
+                    queries.extend(alternatives[:3]) # Take top 3
+            
+            return queries
         except Exception:
-            pass
-
-        return query
-
-    def get_stats(self) -> dict[str, Any]:
-        return {
-            "enabled": self.enabled,
-            "model": self.model,
-            "enhancement_count": self.enhancement_count,
-        }
+            return queries
