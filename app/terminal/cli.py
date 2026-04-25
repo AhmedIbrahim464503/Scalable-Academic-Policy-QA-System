@@ -206,20 +206,47 @@ class RetrievalEngine:
         return model
 
     def search(self, method: str, query: str, top_k: int = DEFAULT_TOP_K) -> SearchResponse:
-        # Optionally enhance the query before retrieval
-        enhanced_query = query
+        # Step 1: Generate multiple queries (Multi-Query Retrieval)
+        queries = [query]
         if self.enhance_enabled and self.query_enhancer and self.query_enhancer.enabled:
-            enhanced_query = self.query_enhancer.enhance(query)
+            queries = self.query_enhancer.generate_queries(query)
 
         model = self.load_method(method)
         start = time.perf_counter()
-        raw_results = model.search(enhanced_query, top_k=top_k)
+        
+        all_raw_results = []
+        # Step 2: Retrieve chunks for EACH query version
+        for q in queries:
+            if method == "baseline":
+                res = model.search(q, top_k=top_k, original_query=query)
+            else:
+                res = model.search(q, top_k=top_k)
+            all_raw_results.extend(res)
+
         latency = time.perf_counter() - start
-        chunks = self._normalize_results(raw_results)
-        answer = self._build_placeholder_answer(query, chunks)
+        
+        # Step 3: Deduplicate and Merge Results
+        merged_chunks = {}
+        for item in all_raw_results:
+            normalized = self._normalize_single_result(item)
+            if not normalized:
+                continue
+            
+            # Use a fingerprint of the text for deduplication
+            chunk_id = hash(normalized["text"][:200]) 
+            if chunk_id not in merged_chunks or normalized["score"] > merged_chunks[chunk_id]["score"]:
+                merged_chunks[chunk_id] = normalized
+
+        # Step 4: Re-rank and take Top-K
+        final_chunks = sorted(merged_chunks.values(), key=lambda x: x["score"], reverse=True)[:top_k]
+        
+        # UI: Combine queries for the display panel
+        enhanced_display = "\n".join([f"- {q}" for q in queries[1:]]) if len(queries) > 1 else ""
+        
+        answer = self._build_placeholder_answer(query, final_chunks)
         return SearchResponse(
-            chunks=chunks, latency=latency, method=method,
-            answer=answer, enhanced_query=enhanced_query if enhanced_query != query else "",
+            chunks=final_chunks, latency=latency, method=method,
+            answer=answer, enhanced_query=enhanced_display,
         )
 
     def _normalize_results(self, raw_results: Any) -> list[dict[str, Any]]:
@@ -883,6 +910,26 @@ class TerminalQAApp:
                 )
 
         self.console.print(table)
+
+        # Deep Comparison: Show LLM Answer and Top Chunk for each method
+        self.console.print("\n[bold cyan]Detailed Method Breakdown[/bold cyan]")
+        for method, resp in comparison_rows:
+            # Answer Panel
+            self.console.print(
+                Panel(
+                    resp.answer or "No answer generated.",
+                    title=f"[bold green]{method.upper()} Answer[/bold green]",
+                    border_style=COLOR_SCHEME["accent"],
+                    box=ROUNDED,
+                )
+            )
+
+            # Top Source
+            if resp.chunks:
+                top = resp.chunks[0]
+                self.console.print(
+                    f"   [dim]Top Source (Page {top['page']}):[/dim] [italic]{top['text'][:150]}...[/italic]\n"
+                )
 
     def _render_history(self) -> None:
         table = Table(box=ROUNDED, title="Query History")
