@@ -71,12 +71,12 @@ class TFIDFBaseline:
             raise ValueError("No chunk text found to index.")
         self.chunk_matrix = self.vectorizer.fit_transform(texts)
 
-    def search(self, query: str, top_k: int = 5) -> list[dict[str, Any]]:
+    def search(self, query: str, top_k: int = 5, original_query: str | None = None) -> list[dict[str, Any]]:
         """Return the most similar chunks for a query."""
         if not query.strip():
             return []
         if self.agent is not None:
-            results, _latency = self.agent.retrieve(query, top_k=top_k)
+            results, _latency = self.agent.retrieve(query, original_query=original_query, top_k=top_k)
             return results
         if self.chunk_matrix is None:
             if self.chunks:

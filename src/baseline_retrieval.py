@@ -26,7 +26,7 @@ class BaselineRetrievalAgent:
         from sklearn.feature_extraction.text import ENGLISH_STOP_WORDS
         custom_stops = {
             "nust", "university", "student", "handbook", "policy", "chapter", "page", "section",
-            "cumulative", "grade", "point", "average", "requirement", "rule", "regulation"
+            "rule", "regulation"
         }
         all_stops = list(ENGLISH_STOP_WORDS.union(custom_stops))
 
@@ -39,15 +39,26 @@ class BaselineRetrievalAgent:
         )
         self.tfidf_matrix = self.vectorizer.fit_transform(self.corpus)
 
-    def retrieve(self, query, top_k=3):
-        """Exact lexical retrieval (TF-IDF) weighted by PageRank authority."""
+    def retrieve(self, query, original_query=None, top_k=3):
+        """Exact lexical retrieval (TF-IDF) with Keyword Boosting."""
         start_time = time.time()
+        
+        # We boost the original terms to prevent "Query Drift" from synonyms
+        boost_terms = original_query.lower().split() if original_query else query.lower().split()
+        boost_terms = [t for t in boost_terms if len(t) > 3] # only boost meaningful words
 
         query_vec = self.vectorizer.transform([query.lower()])
         relevance_scores = cosine_similarity(query_vec, self.tfidf_matrix).flatten()
-        # Use strictly reduced authority weight so specific rules aren't drowned by "important" pages
-        final_scores = relevance_scores * (1.0 + 0.05 * self.authority)
+        
+        # Keyword Boost Logic
+        boost_multiplier = np.ones(len(self.data))
+        for i, chunk in enumerate(self.data):
+            text_low = chunk["text"].lower()
+            for term in boost_terms:
+                if term in text_low:
+                    boost_multiplier[i] += 0.2 # 20% boost for each original keyword hit
 
+        final_scores = relevance_scores * boost_multiplier
         top_indices = np.argsort(final_scores)[-top_k:][::-1]
 
         results = []
