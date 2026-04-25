@@ -66,6 +66,8 @@ def clean_text(text):
         r"\bhec\b": "hec higher education commission",
         r"\bfbs\b": "fbs faculty board of studies",
         r"\bpda\b": "pda public display of affection",
+        r"\b%": " percent ",
+        r"\bpercent\b": "percentage",
     }
     for short, long in abbrevs.items():
         text = re.sub(short, long, text, flags=re.IGNORECASE)
