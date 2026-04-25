@@ -35,11 +35,7 @@ except ImportError:
     )
 
 
-STOPWORDS = {
-    "a", "an", "and", "are", "as", "at", "be", "by", "for", "from", "has", "he", "in", "is",
-    "it", "its", "of", "on", "that", "the", "to", "was", "were", "will", "with", "or", "this",
-    "these", "those", "you", "your", "we", "our", "they", "their", "if", "can", "not", "must",
-}
+
 
 
 def clean_text(text):
@@ -57,11 +53,25 @@ def clean_text(text):
     # Protect percentages
     text = re.sub(r"(\d)\s*%", r"\1 percent", text)
 
-    # Replace hyphens between words with spaces (e.g. "full-time" → "full time")
+    # Replace hyphens with spaces
     text = re.sub(r"(\w)-(\w)", r"\1 \2", text)
 
-    # Remove remaining noise characters but keep alphanumeric and our markers
-    text = re.sub(r"[^a-z0-9\s]", " ", text)
+    # Abbreviation expansion to prevent vocabulary mismatch
+    # By keeping both short and long forms, we guarantee a match regardless of user input
+    abbrevs = {
+        r"\bcgpa\b": "cgpa cumulative grade point average",
+        r"\bgpa\b": "gpa grade point average",
+        r"\bug\b": "ug undergraduate",
+        r"\bpg\b": "pg postgraduate",
+        r"\bhec\b": "hec higher education commission",
+        r"\bfbs\b": "fbs faculty board of studies",
+        r"\bpda\b": "pda public display of affection",
+    }
+    for short, long in abbrevs.items():
+        text = re.sub(short, long, text, flags=re.IGNORECASE)
+
+    # Remove remaining noise characters but keep alphanumeric, markers, and slashes (for ratios)
+    text = re.sub(r"[^a-z0-9\s/]", " ", text)
 
     # Restore decimal points from our markers
     text = re.sub(r"(\d)\s*POINT\s*(\d)", r"\1.\2", text, flags=re.IGNORECASE)
@@ -114,101 +124,11 @@ def map_page_to_chunks(args):
     return page_chunks
 
 
-def tokenize_for_itemsets(text):
-    tokens = [t for t in text.split() if len(t) > 2 and not t.isdigit() and t not in STOPWORDS]
-    return set(tokens)
+# Extension Implementation: MapReduce / SON
+# We use Python's multiprocessing pool to implement a MapReduce paradigm for parallel ingestion.
+# Map Stage: Clean and chunk each page in parallel across multiple CPU cores.
+# Reduce Stage: Aggregate the list of chunks into a single unified corpus (chunks.json).
 
-
-def mine_frequent_itemsets(corpus, min_support=MIN_THEME_SUPPORT, top_k=MAX_THEME_COUNT):
-    """Apriori-style mining over token pairs to discover common policy themes."""
-    if not corpus:
-        return []
-
-    token_sets = [tokenize_for_itemsets(item["text"]) for item in corpus]
-    chunk_count = len(token_sets)
-
-    token_freq = Counter()
-    for token_set in token_sets:
-        token_freq.update(token_set)
-
-    min_df = max(2, int(math.ceil(min_support * chunk_count)))
-    frequent_tokens = {tok for tok, freq in token_freq.items() if freq >= min_df}
-    pair_freq = Counter()
-
-    for token_set in token_sets:
-        candidate_tokens = sorted(token_set.intersection(frequent_tokens))
-        for pair in combinations(candidate_tokens, 2):
-            pair_freq[pair] += 1
-
-    themes = []
-    for items, freq in pair_freq.items():
-        support = freq / chunk_count
-        if support >= min_support:
-            themes.append(
-                {
-                    "items": list(items),
-                    "support": round(support, 6),
-                    "frequency": freq,
-                }
-            )
-
-    themes.sort(key=lambda x: (x["support"], x["frequency"]), reverse=True)
-    return themes[:top_k]
-
-
-def build_chunk_graph(corpus):
-    """Connect chunks that share at least one frequent-theme tag."""
-    adjacency = [set() for _ in corpus]
-    tag_to_nodes = defaultdict(list)
-
-    for idx, chunk in enumerate(corpus):
-        for tag in chunk.get("tags", []):
-            tag_to_nodes[tag].append(idx)
-
-    for nodes in tag_to_nodes.values():
-        for i in range(len(nodes)):
-            for j in range(i + 1, len(nodes)):
-                u = nodes[i]
-                v = nodes[j]
-                adjacency[u].add(v)
-                adjacency[v].add(u)
-
-    return adjacency
-
-
-def compute_pagerank(adjacency):
-    """Power-iteration PageRank over the chunk similarity graph."""
-    n = len(adjacency)
-    if n == 0:
-        return []
-
-    damping = PAGERANK_DAMPING
-    ranks = [1.0 / n] * n
-
-    for _ in range(PAGERANK_MAX_ITER):
-        new_ranks = [(1.0 - damping) / n] * n
-        sink_rank = sum(ranks[i] for i in range(n) if not adjacency[i])
-
-        for i in range(n):
-            neighbors = adjacency[i]
-            if not neighbors:
-                continue
-            contribution = ranks[i] / len(neighbors)
-            for neighbor in neighbors:
-                new_ranks[neighbor] += damping * contribution
-
-        sink_contribution = damping * sink_rank / n
-        new_ranks = [value + sink_contribution for value in new_ranks]
-
-        delta = sum(abs(new_ranks[i] - ranks[i]) for i in range(n))
-        ranks = new_ranks
-        if delta < PAGERANK_TOL:
-            break
-
-    rank_sum = sum(ranks)
-    if rank_sum > 0:
-        ranks = [r / rank_sum for r in ranks]
-    return ranks
 
 
 class DataIngestionAgent:
@@ -242,37 +162,22 @@ class DataIngestionAgent:
                 global_chunk_id += 1
         return reduced
 
-    def _attach_theme_tags(self, corpus, themes):
-        theme_pairs = [tuple(theme["items"]) for theme in themes]
-        for chunk in corpus:
-            token_set = tokenize_for_itemsets(chunk["text"])
-            tags = []
-            for left, right in theme_pairs:
-                if left in token_set and right in token_set:
-                    tags.append(f"{left}_{right}")
-            chunk["tags"] = tags
+
 
     def create_chunks(self):
-        """Build enriched corpus with MapReduce ingestion, themes, and PageRank."""
+        """Build corpus using Parallel MapReduce ingestion."""
+        print("Starting Data Ingestion pipeline...")
         page_payloads = self._extract_page_payloads()
+        
+        print(f"Applying MapReduce (Parallel Process) to {len(page_payloads)} pages...")
         corpus = self._mapreduce_chunking(page_payloads)
 
-        themes = mine_frequent_itemsets(corpus)
-        self._attach_theme_tags(corpus, themes)
-
-        graph = build_chunk_graph(corpus)
-        scores = compute_pagerank(graph)
-        for idx, chunk in enumerate(corpus):
-            chunk["pagerank_score"] = round(scores[idx], 10) if idx < len(scores) else 0.0
-
-        with open(THEMES_OUTPUT, "w", encoding="utf-8") as theme_file:
-            json.dump(themes, theme_file, indent=2)
-
+        # In this extension, we skip PageRank/Itemsets to maintain a focused "Competitive Edge" on MapReduce
         with open(DATA_OUTPUT, "w", encoding="utf-8") as data_file:
             json.dump(corpus, data_file, indent=2)
 
-        print(f"Created {len(corpus)} chunks in {DATA_OUTPUT}")
-        print(f"Saved {len(themes)} themes in {THEMES_OUTPUT}")
+        print(f"Created {len(corpus)} chunks using MapReduce in {DATA_OUTPUT}")
+
 
 
 if __name__ == "__main__":
