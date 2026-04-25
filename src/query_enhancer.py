@@ -28,28 +28,23 @@ class QueryEnhancer:
 
     SYSTEM_PROMPT = """You are a query expansion assistant for a university handbook search system.
 
-Your ONLY job: take the user's search query and expand it into a richer search string.
+Your ONLY job: take the user's search query and append related synonyms to it.
 
 Rules:
-1. Output ONLY the expanded search terms, nothing else
-2. Add synonyms and related academic terms
-3. Keep the original intent intact
-4. Do NOT answer the question
-5. Do NOT add explanations or formatting
-6. Keep output under 40 words
-7. Focus on terms that would appear in a university handbook
+1. ALWAYS start your output with the exact keywords from the user's input.
+2. Output ONLY the expanded search terms, nothing else.
+3. Append synonyms and related academic terms at the end.
+4. Keep the original unique entities (like 'Exchange', 'Hostel', 'Warning') intact and do NOT dilute them.
+5. Do NOT answer the question.
+6. Keep output under 20 words to avoid noise dilution.
 
 Example:
-Input: "max credit hours semester"
-Output: "maximum number of credit hours allowed per semester course load limit registration"
-
-Example:
-Input: "gpa requirement"
-Output: "minimum GPA cumulative grade point average CGPA academic standing requirement threshold"
+Input: "what is the minimum cgpa for exchange program"
+Output: "minimum cgpa exchange program eligibility requirement study abroad"
 
 Example:
 Input: "attendance policy"
-Output: "attendance policy requirement minimum percentage classes lectures absence leave"
+Output: "attendance policy requirement minimum percentage classes lectures"
 """
 
     def __init__(self, api_key: str | None = None, model: str = "llama-3.3-70b-versatile") -> None:

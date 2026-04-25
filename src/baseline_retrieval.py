@@ -24,14 +24,17 @@ class BaselineRetrievalAgent:
                 self.authority = self.authority / max_authority
 
         from sklearn.feature_extraction.text import ENGLISH_STOP_WORDS
-        custom_stops = {"nust", "university", "student", "handbook", "policy", "chapter", "page", "section"}
+        custom_stops = {
+            "nust", "university", "student", "handbook", "policy", "chapter", "page", "section",
+            "cumulative", "grade", "point", "average", "requirement", "rule", "regulation"
+        }
         all_stops = list(ENGLISH_STOP_WORDS.union(custom_stops))
 
         self.vectorizer = TfidfVectorizer(
             stop_words=all_stops,
             ngram_range=(1, 2),      # capture phrases like "credit hours", "minimum gpa"
             sublinear_tf=True,       # dampen dominant terms in long chunks
-            max_df=0.85,             # ignore terms in >85% of chunks (too generic)
+            max_df=0.75,             # ignore terms in >75% of chunks to heavily filter noise
             min_df=2,                # ignore terms appearing only once
         )
         self.tfidf_matrix = self.vectorizer.fit_transform(self.corpus)
